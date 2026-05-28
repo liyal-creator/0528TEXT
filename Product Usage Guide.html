@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>产品适用指南</title>
+<style>
+  :root{
+    --primary:#44D564;
+    --primary-light:#E8F3FF;
+    --success:#00B42A;
+    --warning:#FF7D00;
+    --danger:#F53F3F;
+    --text-primary:#1D2129;
+    --text-secondary:#4E5969;
+    --text-tertiary:#86909C;
+    --border:#C9CDD4;
+    --bg-page:#F2F3F5;
+    --bg-white:#FFFFFF;
+    --text-inverse:#FFFFFF;
+    --shadow-navbar:0 1px 4px rgba(0,0,0,0.05);
+    --shadow-card:0 2px 8px rgba(0,0,0,0.06);
+    --font-h1:24px;
+    --font-h2:20px;
+    --font-h3:18px;
+    --font-body:16px;
+    --font-caption:14px;
+    --font-small:12px;
+    --space-4:4px;
+    --space-8:8px;
+    --space-16:16px;
+    --space-24:24px;
+    --space-32:32px;
+  }
+  body[data-theme="dark"]{
+    --text-primary:#FFFFFF;
+    --text-secondary:#C9CDD4;
+    --text-tertiary:#86909C;
+    --border:#4E5969;
+    --bg-page:#111318;
+    --bg-white:#1D2129;
+    --text-inverse:#FFFFFF;
+    --shadow-navbar:0 1px 4px rgba(0,0,0,0.18);
+    --shadow-card:0 2px 8px rgba(0,0,0,0.18);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;min-height:100%;background:var(--bg-page);color:var(--text-primary)}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+    user-select:none;
+    -webkit-user-select:none;
+    -webkit-touch-callout:none;
+    font-size:var(--font-body);
+    line-height:24px;
+  }
+  input,textarea{user-select:text;-webkit-user-select:text;-webkit-touch-callout:default}
+  button{font:inherit}
+  .page-guide{min-height:100vh;background:var(--bg-page)}
+  .component-navbar{height:44px;background:var(--bg-white);box-shadow:var(--shadow-navbar);display:flex;align-items:center;justify-content:center;padding:0 var(--space-16);position:sticky;top:0;z-index:2}
+  .component-navbar-title{font-size:17px;line-height:24px;font-weight:600;color:var(--text-primary);margin:0}
+  .section-content{max-width:375px;margin:0 auto;padding:var(--space-16)}
+  .component-title{font-size:var(--font-h2);line-height:28px;font-weight:600;margin:0 0 var(--space-16);color:var(--text-primary)}
+  .card-default{background:var(--bg-white);border-radius:12px;padding:12px;box-shadow:var(--shadow-card);margin-bottom:var(--space-16)}
+  .component-step-head{display:flex;gap:var(--space-8);align-items:flex-start}
+  .element-step-num{width:24px;height:24px;border-radius:12px;background:var(--primary);color:var(--text-inverse);display:flex;align-items:center;justify-content:center;font-size:var(--font-small);line-height:16px;font-weight:600;flex:0 0 24px}
+  .element-step-title{font-size:var(--font-h3);line-height:24px;font-weight:500;margin:0;color:var(--text-primary)}
+  .element-step-text{font-size:var(--font-caption);line-height:20px;font-weight:400;color:var(--text-secondary);margin:var(--space-8) 0 0}
+  .component-module-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-16);margin-top:var(--space-16)}
+  .component-module-card{background:var(--bg-page);border-radius:12px;padding:12px;min-height:88px}
+  .element-module-title{font-size:var(--font-caption);line-height:20px;font-weight:500;color:var(--text-primary);margin:0}
+  .element-module-text{font-size:var(--font-caption);line-height:20px;font-weight:400;color:var(--text-tertiary);margin:var(--space-4) 0 0}
+  .component-list{margin-top:var(--space-16);background:var(--bg-white)}
+  .component-list-item{height:56px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:var(--space-8);background:var(--bg-white)}
+  .component-list-item:last-child{border-bottom:0}
+  .element-icon{width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex:0 0 40px}
+  .element-icon svg{width:24px;height:24px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .element-list-main{flex:1;min-width:0}
+  .element-list-title{font-size:var(--font-body);line-height:24px;font-weight:400;color:var(--text-primary);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .element-list-subtitle{font-size:var(--font-caption);line-height:20px;font-weight:400;color:var(--text-tertiary);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .element-list-arrow{font-size:var(--font-body);line-height:24px;color:var(--text-tertiary);margin-left:var(--space-8)}
+  .component-recommend-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-16);margin-top:var(--space-16)}
+  .component-recommend-card{background:var(--bg-white);border-radius:12px;padding:12px;box-shadow:var(--shadow-card);min-height:120px}
+  .element-recommend-icon{width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary)}
+  .element-recommend-icon svg{width:24px;height:24px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .element-recommend-title{font-size:var(--font-caption);line-height:20px;font-weight:500;color:var(--text-primary);margin:var(--space-8) 0 0}
+  .element-recommend-text{font-size:var(--font-caption);line-height:20px;font-weight:400;color:var(--text-secondary);margin:var(--space-4) 0 0}
+  .element-note{font-size:var(--font-caption);line-height:20px;font-weight:400;color:var(--text-tertiary);text-align:center;margin:var(--space-16) 0 0}
+  [dir="rtl"] .component-step-head{flex-direction:row-reverse}
+  [dir="rtl"] .component-list-item{flex-direction:row-reverse}
+  [dir="rtl"] .element-list-arrow{margin-left:0;margin-right:var(--space-8);transform:rotate(180deg)}
+  @media (min-width:768px){
+    .section-content{max-width:480px;padding:var(--space-24)}
+  }
+
+</style>
+</head>
+<body>
+  <div class="page-guide">
+    <main class="section-content">
+      <h2 class="component-title" data-i18n="changeTitle"></h2>
+
+      <section class="card-default">
+        <div class="component-step-head">
+          <span class="element-step-num">1</span>
+          <div>
+            <h3 class="element-step-title" data-i18n="step1Title"></h3>
+            <p class="element-step-text" data-i18n="step1Text"></p>
+          </div>
+        </div>
+        <div class="component-module-grid">
+          <article class="component-module-card">
+            <h4 class="element-module-title" data-i18n="moduleSpotlight"></h4>
+            <p class="element-module-text" data-i18n="moduleSpotlightText"></p>
+          </article>
+          <article class="component-module-card">
+            <h4 class="element-module-title" data-i18n="moduleCommunityPicks"></h4>
+            <p class="element-module-text" data-i18n="moduleCommunityPicksText"></p>
+          </article>
+          <article class="component-module-card">
+            <h4 class="element-module-title" data-i18n="moduleRanking"></h4>
+            <p class="element-module-text" data-i18n="moduleRankingText"></p>
+          </article>
+          <article class="component-module-card">
+            <h4 class="element-module-title" data-i18n="moduleCreatorTimeline"></h4>
+            <p class="element-module-text" data-i18n="moduleCreatorTimelineText"></p>
+          </article>
+        </div>
+      </section>
+
+      <section class="card-default">
+        <div class="component-step-head">
+          <span class="element-step-num">2</span>
+          <div>
+            <h3 class="element-step-title" data-i18n="step2Title"></h3>
+            <p class="element-step-text" data-i18n="step2Text"></p>
+          </div>
+        </div>
+        <div class="component-list" id="areaList"></div>
+      </section>
+
+      <section class="card-default">
+        <div class="component-step-head">
+          <span class="element-step-num">3</span>
+          <div>
+            <h3 class="element-step-title" data-i18n="step3Title"></h3>
+            <p class="element-step-text" data-i18n="step3Text"></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card-default">
+        <div class="component-step-head">
+          <span class="element-step-num">4</span>
+          <div>
+            <h3 class="element-step-title" data-i18n="step4Title"></h3>
+            <p class="element-step-text" data-i18n="step4Text"></p>
+          </div>
+        </div>
+        <div class="component-recommend-grid" id="recommendList"></div>
+      </section>
+
+      <p class="element-note" data-i18n="note"></p>
+    </main>
+  </div>
+
+
+<script type="application/json" id="i18n-data">
+{
+  "en": {
+    "title": "Product Guide",
+    "bgTitle": "Channels",
+    "tabFollow": "Follow",
+    "tabWeb3": "Web3",
+    "tabCommunity": "Community",
+    "bgSpotlightTitle": "Spotlight",
+    "bgSpotlightText": "Featured channel picks and trending content.",
+    "bgPickTitle": "Community Picks",
+    "bgPickText": "Useful guides and curated topics.",
+    "bgCreatorTitle": "Creator Updates",
+    "bgCreatorText": "Fresh posts from creators.",
+    "pageTitle": "Product Guide",
+    "changeTitle": "What changed?",
+    "step1Title": "New Community",
+    "step1Text": "Find Spotlight, Community Picks, rankings, and creator updates here.",
+    "moduleSpotlight": "Spotlight",
+    "moduleSpotlightText": "Featured channels and trending content.",
+    "moduleCommunityPicks": "Community Picks",
+    "moduleCommunityPicksText": "Selected guides, topics, and activities.",
+    "moduleRanking": "Rankings",
+    "moduleRankingText": "Popular lists and community trends.",
+    "moduleCreatorTimeline": "Creator Updates",
+    "moduleCreatorTimelineText": "Latest updates from creators.",
+    "step2Title": "Tap “+” to add areas",
+    "step2Text": "Add the areas you care about. After adding them, related content will appear on your Channels page.",
+    "step3Title": "Web3 and Follow remain",
+    "step3Text": "Web3 is still the core entry for Web3 content. Follow continues to show updates from channels you follow.",
+    "step4Title": "Not sure what to add first?",
+    "step4Text": "Start with two or three areas based on what you want to read.",
+    "note": "This guide helps you quickly understand the new Channels page. You can add or adjust areas anytime.",
+    "areaSub_project": "Project updates",
+    "areaSub_market": "Market signals",
+    "areaSub_web3_news": "Web3 news",
+    "areaSub_opportunities": "Events and opportunities",
+    "areaSub_for_you": "General picks",
+    "areaSub_tech": "Tech trends",
+    "areaSub_business": "Markets and business",
+    "areaSub_news": "Headlines",
+    "areaSub_entertainment": "Fun content",
+    "areaSub_lifestyle": "Lifestyle ideas",
+    "areaSub_ai": "Follow AI Tools and Trends",
+    "areaSub_relax": "Discover Fun and Engaging Content",
+    "recTrendTitle": "Follow trends",
+    "recTrendText": "Start with AI, Technology, and World News.",
+    "recWeb3Title": "Read Web3",
+    "recWeb3Text": "Start with Market, Projects, and Opportunities.",
+    "recLightTitle": "Browse lightly",
+    "recLightText": "Start with Entertainment, Lifestyle, and Relax.",
+    "recGeneralTitle": "See a mix",
+    "recGeneralText": "Start with For You."
+  },
+  "zhHans": {
+    "title": "产品适用指南",
+    "bgTitle": "频道",
+    "tabFollow": "关注",
+    "tabWeb3": "Web3",
+    "tabCommunity": "社区",
+    "bgSpotlightTitle": "焦点推荐",
+    "bgSpotlightText": "频道推荐与热点内容发现。",
+    "bgPickTitle": "社区精选",
+    "bgPickText": "精选实用指南与推荐专题。",
+    "bgCreatorTitle": "创作者动态",
+    "bgCreatorText": "来自创作者的最新内容。",
+    "pageTitle": "产品适用指南",
+    "changeTitle": "有什么变化？",
+    "step1Title": "新增「社区」",
+    "step1Text": "你会在这里看到焦点推荐、社区精选、排行榜和创作者动态。",
+    "moduleSpotlight": "焦点推荐",
+    "moduleSpotlightText": "频道推荐与热点内容发现。",
+    "moduleCommunityPicks": "社区精选",
+    "moduleCommunityPicksText": "精选值得参与的活动与实用指南。",
+    "moduleRanking": "排行榜",
+    "moduleRankingText": "热门榜单和社区趋势。",
+    "moduleCreatorTimeline": "创作者动态",
+    "moduleCreatorTimelineText": "创作者最新内容。",
+    "step2Title": "想看更多内容，点左上角「+」",
+    "step2Text": "新版支持你自己添加感兴趣的区域。添加后，对应内容会出现在你的频道页里。",
+    "step3Title": "Web3 和「关注」仍然保留",
+    "step3Text": "Web3 还是原来的核心入口，「关注」继续承接已关注频道的内容。新版只是把可选内容区域交给你自己管理。",
+    "step4Title": "不知道先加什么？",
+    "step4Text": "可以按你的使用目的来选，先添加 2 到 3 个区域就够了。",
+    "note": "本指南用于帮助你快速理解新版频道页。你可以随时添加或调整区域。",
+    "areaSub_project": "项目动态",
+    "areaSub_market": "行情信号",
+    "areaSub_web3_news": "Web3 行业资讯",
+    "areaSub_opportunities": "活动与机会",
+    "areaSub_for_you": "综合推荐",
+    "areaSub_tech": "科技趋势",
+    "areaSub_business": "市场与商业",
+    "areaSub_news": "热点速览",
+    "areaSub_entertainment": "轻松内容",
+    "areaSub_lifestyle": "生活灵感",
+    "areaSub_ai": "追踪 AI 工具与趋势",
+    "areaSub_relax": "发现有趣又上头的内容",
+    "recTrendTitle": "追趋势",
+    "recTrendText": "先加 AI、科技、全球新闻。",
+    "recWeb3Title": "看 Web3",
+    "recWeb3Text": "先加市场、项目方、机会。",
+    "recLightTitle": "轻松刷",
+    "recLightText": "先加娱乐、生活、轻松一下。",
+    "recGeneralTitle": "综合看",
+    "recGeneralText": "先加为你推荐。"
+  },
+  "zhHant": {
+    "title": "產品適用指南",
+    "bgTitle": "頻道",
+    "tabFollow": "關注",
+    "tabWeb3": "Web3",
+    "tabCommunity": "社區",
+    "bgSpotlightTitle": "焦點推薦",
+    "bgSpotlightText": "頻道推薦與熱點內容發現。",
+    "bgPickTitle": "社區精選",
+    "bgPickText": "精選實用指南與推薦專題。",
+    "bgCreatorTitle": "創作者動態",
+    "bgCreatorText": "來自創作者的最新內容。",
+    "pageTitle": "產品適用指南",
+    "changeTitle": "有什麼變化？",
+    "step1Title": "新增「社區」",
+    "step1Text": "你會在這裡看到焦點推薦、社區精選、排行榜和創作者動態。",
+    "moduleSpotlight": "焦點推薦",
+    "moduleSpotlightText": "頻道推薦與熱點內容發現。",
+    "moduleCommunityPicks": "社區精選",
+    "moduleCommunityPicksText": "精選值得參與的活動與實用指南。",
+    "moduleRanking": "排行榜",
+    "moduleRankingText": "熱門榜單和社區趨勢。",
+    "moduleCreatorTimeline": "創作者動態",
+    "moduleCreatorTimelineText": "創作者最新內容。",
+    "step2Title": "想看更多內容，點左上角「+」",
+    "step2Text": "新版支援你自己添加感興趣的區域。添加後，對應內容會出現在你的頻道頁裡。",
+    "step3Title": "Web3 和「關注」仍然保留",
+    "step3Text": "Web3 仍是原來的核心入口，「關注」繼續承接已關注頻道的內容。新版只是把可選內容區域交給你自己管理。",
+    "step4Title": "不知道先加什麼？",
+    "step4Text": "可以按你的使用目的來選，先添加 2 到 3 個區域就夠了。",
+    "note": "本指南用於幫助你快速理解新版頻道頁。你可以隨時添加或調整區域。",
+    "areaSub_project": "項目動態",
+    "areaSub_market": "行情信號",
+    "areaSub_web3_news": "Web3 行業資訊",
+    "areaSub_opportunities": "活動與機會",
+    "areaSub_for_you": "綜合推薦",
+    "areaSub_tech": "科技趨勢",
+    "areaSub_business": "市場與商業",
+    "areaSub_news": "熱點速覽",
+    "areaSub_entertainment": "輕鬆內容",
+    "areaSub_lifestyle": "生活靈感",
+    "areaSub_ai": "追蹤 AI 工具與趨勢",
+    "areaSub_relax": "發現有趣又上頭的內容",
+    "recTrendTitle": "追趨勢",
+    "recTrendText": "先加 AI、科技、全球新聞。",
+    "recWeb3Title": "看 Web3",
+    "recWeb3Text": "先加市場、項目方、機會。",
+    "recLightTitle": "輕鬆刷",
+    "recLightText": "先加娛樂、生活、輕鬆一下。",
+    "recGeneralTitle": "綜合看",
+    "recGeneralText": "先加為你推薦。"
+  },
+  "ru": {
+    "title": "Руководство по продукту",
+    "bgTitle": "Каналы",
+    "tabFollow": "Подписки",
+    "tabWeb3": "Web3",
+    "tabCommunity": "Сообщество",
+    "bgSpotlightTitle": "Рекомендации",
+    "bgSpotlightText": "Избранные каналы и популярный контент.",
+    "bgPickTitle": "Выбор сообщества",
+    "bgPickText": "Полезные руководства и темы.",
+    "bgCreatorTitle": "Авторы",
+    "bgCreatorText": "Новые публикации авторов.",
+    "pageTitle": "Руководство по продукту",
+    "changeTitle": "Что изменилось?",
+    "step1Title": "Новое сообщество",
+    "step1Text": "Здесь вы найдете рекомендации, выбор сообщества, рейтинги и обновления авторов.",
+    "moduleSpotlight": "Рекомендации",
+    "moduleSpotlightText": "Каналы и популярный контент.",
+    "moduleCommunityPicks": "Выбор сообщества",
+    "moduleCommunityPicksText": "Руководства, темы и активности.",
+    "moduleRanking": "Рейтинги",
+    "moduleRankingText": "Популярные списки и тренды.",
+    "moduleCreatorTimeline": "Авторы",
+    "moduleCreatorTimelineText": "Последние обновления авторов.",
+    "step2Title": "Нажмите «+», чтобы добавить разделы",
+    "step2Text": "Добавьте интересные вам разделы, и связанный контент появится на странице каналов.",
+    "step3Title": "Web3 и подписки остаются",
+    "step3Text": "Web3 остается основным входом для Web3-контента, а подписки показывают обновления выбранных каналов.",
+    "step4Title": "Не знаете, что добавить?",
+    "step4Text": "Начните с двух или трех разделов по вашим целям.",
+    "note": "Это руководство поможет быстро понять новую страницу каналов.",
+    "areaSub_project": "Обновления проектов",
+    "areaSub_market": "Рыночные сигналы",
+    "areaSub_web3_news": "Новости Web3",
+    "areaSub_opportunities": "Активности и возможности",
+    "areaSub_for_you": "Общие рекомендации",
+    "areaSub_tech": "Тренды технологий",
+    "areaSub_business": "Бизнес и рынок",
+    "areaSub_news": "Главные новости",
+    "areaSub_entertainment": "Развлечения",
+    "areaSub_lifestyle": "Идеи для жизни",
+    "areaSub_ai": "AI-инструменты и тренды",
+    "areaSub_relax": "Интересный контент",
+    "recTrendTitle": "Тренды",
+    "recTrendText": "Начните с AI, технологий и мировых новостей.",
+    "recWeb3Title": "Web3",
+    "recWeb3Text": "Начните с рынка, проектов и возможностей.",
+    "recLightTitle": "Легкий просмотр",
+    "recLightText": "Начните с развлечений, образа жизни и отдыха.",
+    "recGeneralTitle": "Разное",
+    "recGeneralText": "Начните с раздела «Для вас»."
+  },
+  "ar": {
+    "title": "دليل المنتج",
+    "bgTitle": "القنوات",
+    "tabFollow": "المتابعة",
+    "tabWeb3": "Web3",
+    "tabCommunity": "المجتمع",
+    "bgSpotlightTitle": "مختارات بارزة",
+    "bgSpotlightText": "قنوات مختارة ومحتوى رائج.",
+    "bgPickTitle": "مختارات المجتمع",
+    "bgPickText": "أدلة وموضوعات مختارة.",
+    "bgCreatorTitle": "تحديثات المبدعين",
+    "bgCreatorText": "منشورات جديدة من المبدعين.",
+    "pageTitle": "دليل المنتج",
+    "changeTitle": "ما الجديد؟",
+    "step1Title": "مجتمع جديد",
+    "step1Text": "ستجد هنا المختارات البارزة ومختارات المجتمع والتصنيفات وتحديثات المبدعين.",
+    "moduleSpotlight": "مختارات بارزة",
+    "moduleSpotlightText": "قنوات مختارة ومحتوى رائج.",
+    "moduleCommunityPicks": "مختارات المجتمع",
+    "moduleCommunityPicksText": "أدلة وموضوعات وأنشطة مختارة.",
+    "moduleRanking": "التصنيفات",
+    "moduleRankingText": "قوائم رائجة واتجاهات المجتمع.",
+    "moduleCreatorTimeline": "تحديثات المبدعين",
+    "moduleCreatorTimelineText": "أحدث تحديثات المبدعين.",
+    "step2Title": "اضغط على + لإضافة الأقسام",
+    "step2Text": "أضف الأقسام التي تهمك، وسيظهر المحتوى المرتبط بها في صفحة القنوات.",
+    "step3Title": "Web3 والمتابعة ما زالا موجودين",
+    "step3Text": "يبقى Web3 المدخل الأساسي لمحتوى Web3، وتعرض المتابعة تحديثات القنوات التي تتابعها.",
+    "step4Title": "لا تعرف ماذا تضيف أولاً؟",
+    "step4Text": "ابدأ بقسمين أو ثلاثة حسب ما تريد قراءته.",
+    "note": "يساعدك هذا الدليل على فهم صفحة القنوات الجديدة بسرعة.",
+    "areaSub_project": "تحديثات المشاريع",
+    "areaSub_market": "إشارات السوق",
+    "areaSub_web3_news": "أخبار Web3",
+    "areaSub_opportunities": "أنشطة وفرص",
+    "areaSub_for_you": "مختارات عامة",
+    "areaSub_tech": "اتجاهات التقنية",
+    "areaSub_business": "الأعمال والسوق",
+    "areaSub_news": "العناوين الرئيسية",
+    "areaSub_entertainment": "محتوى ترفيهي",
+    "areaSub_lifestyle": "أفكار للحياة",
+    "areaSub_ai": "تابع أدوات واتجاهات الذكاء الاصطناعي",
+    "areaSub_relax": "اكتشف محتوى ممتعًا وجذابًا",
+    "recTrendTitle": "تابع الاتجاهات",
+    "recTrendText": "ابدأ بالذكاء الاصطناعي والتقنية وأخبار العالم.",
+    "recWeb3Title": "اقرأ Web3",
+    "recWeb3Text": "ابدأ بالسوق والمشاريع والفرص.",
+    "recLightTitle": "تصفح خفيف",
+    "recLightText": "ابدأ بالترفيه ونمط الحياة والاسترخاء.",
+    "recGeneralTitle": "محتوى متنوع",
+    "recGeneralText": "ابدأ بقسم لك."
+  }
+}
+</script>
+<script>
+  const categoryCopy = {
+    en:{project:'Projects',market:'Market',web3_news:'News',opportunities:'Opportunities',for_you:'For You',tech:'Technology',business:'Business & Finance',news:'World News',entertainment:'Entertainment',lifestyle:'Lifestyle',ai:'AI',relax:'Relax'},
+    zhHans:{project:'项目方',market:'市场',web3_news:'资讯',opportunities:'机会',for_you:'为你推荐',tech:'科技',business:'商业财经',news:'全球新闻',entertainment:'娱乐',lifestyle:'生活',ai:'AI',relax:'轻松一下'},
+    zhHant:{project:'項目方',market:'市場',web3_news:'資訊',opportunities:'機會',for_you:'為你推薦',tech:'科技',business:'商業財經',news:'全球新聞',entertainment:'娛樂',lifestyle:'生活',ai:'AI',relax:'輕鬆一下'},
+    ru:{project:'Проекты',market:'Рынок',web3_news:'Новости',opportunities:'Возможности',for_you:'Для вас',tech:'Технологии',business:'Бизнес и финансы',news:'Мировые новости',entertainment:'Развлечения',lifestyle:'Образ жизни',ai:'AI',relax:'Отдых'},
+    ar:{project:'المشاريع',market:'السوق',web3_news:'الأخبار',opportunities:'الفرص',for_you:'لك',tech:'التقنية',business:'الأعمال والمال',news:'أخبار العالم',entertainment:'الترفيه',lifestyle:'نمط الحياة',ai:'الذكاء الاصطناعي',relax:'استرخاء'}
+  };
+  const icons = {
+    project:'<svg viewBox="0 0 28 28"><rect x="4" y="4" width="20" height="20" rx="6"></rect><path d="M14 7.8 20 11.2v6.8L14 21.2 8 18v-6.8L14 7.8z"></path><path d="M8 11.2 14 14.4l6-3.2M14 14.4v6.8"></path></svg>',
+    market:'<svg viewBox="0 0 28 28"><rect x="4" y="4" width="20" height="20" rx="6"></rect><path d="M8 17.2l4-4 3.2 3.2L20 11"></path></svg>',
+    web3_news:'<svg viewBox="0 0 28 28"><rect x="5" y="4" width="18" height="20" rx="4"></rect><path d="M9 8.5h4.5M9 12h10M9 15.5h10M9 19h7"></path></svg>',
+    opportunities:'<svg viewBox="0 0 28 28"><path d="M9 21h10"></path><path d="M11 23h6"></path><path d="M8 12a6 6 0 1 1 12 0c0 3.5-2.2 4.2-2.2 6H10.2C10.2 16.2 8 15.5 8 12z"></path></svg>',
+    for_you:'<svg viewBox="0 0 28 28"><circle cx="14" cy="11.5" r="8"></circle><path d="M6 23h16"></path></svg>',
+    tech:'<svg viewBox="0 0 28 28"><rect x="8" y="8" width="12" height="12" rx="3"></rect><path d="M11 4v4M17 4v4M11 20v4M17 20v4M4 11h4M4 17h4M20 11h4M20 17h4"></path></svg>',
+    business:'<svg viewBox="0 0 28 28"><rect x="5" y="7" width="18" height="16" rx="4"></rect><path d="M9 11h6M9 16h5M18 11h5M18 7v4M21 15h3"></path></svg>',
+    news:'<svg viewBox="0 0 28 28"><rect x="5" y="4" width="18" height="20" rx="5"></rect><path d="M14 5v18M6 14h16"></path></svg>',
+    entertainment:'<svg viewBox="0 0 28 28"><path d="M14 4.5l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L14 19.3l-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9L14 4.5z"></path></svg>',
+    lifestyle:'<svg viewBox="0 0 28 28"><path d="M14 4 23 10v11a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V10l9-6z"></path><path d="M10 22v-7h8v7M10 11h8"></path></svg>',
+    ai:'<svg viewBox="0 0 28 28"><circle cx="14" cy="14" r="10"></circle><path d="M15 6 9.5 15h4L12.5 22 18.5 12h-4L15 6z"></path></svg>',
+    relax:'<svg viewBox="0 0 28 28"><path d="M10.5 7.5c-3 0-5 2.2-5 5.2 0 5.8 8.5 10.5 8.5 10.5s8.5-4.7 8.5-10.5c0-3-2-5.2-5-5.2-1.8 0-3.1 1-4 2.3-.9-1.3-2.2-2.3-4-2.3z"></path><path d="M9 5.5c1.6-.8 3.2-.3 4.2 1.2"></path></svg>'
+  };
+  const areaOrder = ['project','market','web3_news','opportunities','for_you','tech','business','news','entertainment','lifestyle','ai','relax'];
+  const recommendIcons = ['tech','market','entertainment','for_you'];
+
+  function getParams(){return new URLSearchParams(window.location.search)}
+  function getTheme(params){
+    const theme = (params.get('theme') || '').toLowerCase();
+    const isDark = params.get('isDark');
+    if(theme === 'dark' || isDark === '1') return 'dark';
+    return 'light';
+  }
+  function getLang(params){
+    const rawValue = params.get('language') || params.get('lang');
+    if(!rawValue) return 'en';
+    const value = rawValue.toLowerCase();
+    const zhHansValues = ['zh-hans-raw','zh-cn','zhcn','zhhans','zh-hans'];
+    const zhHantValues = ['zh','zh-hant-raw','zh-hant','zhhant','zh-tw','zhtw','zh-hk','zhhk'];
+    if(zhHansValues.includes(value)) return 'zhHans';
+    if(zhHantValues.includes(value)) return 'zhHant';
+    if(value === 'ru') return 'ru';
+    if(value === 'ar') return 'ar';
+    if(value === 'en') return 'en';
+    return 'en';
+  }
+  function renderIcon(code){return icons[code] || icons.for_you}
+  function renderAreas(lang,t){
+    const list = document.getElementById('areaList');
+    list.innerHTML = areaOrder.map(code => '<div class="component-list-item"><span class="element-icon">' + renderIcon(code) + '</span><div class="element-list-main"><p class="element-list-title">' + categoryCopy[lang][code] + '</p><p class="element-list-subtitle">' + t['areaSub_' + code] + '</p></div><span class="element-list-arrow">›</span></div>').join('');
+  }
+  function renderRecommends(t){
+    const data = [
+      ['recTrendTitle','recTrendText','tech'],
+      ['recWeb3Title','recWeb3Text','market'],
+      ['recLightTitle','recLightText','entertainment'],
+      ['recGeneralTitle','recGeneralText','for_you']
+    ];
+    document.getElementById('recommendList').innerHTML = data.map(item => '<article class="component-recommend-card"><div class="element-recommend-icon">' + renderIcon(item[2]) + '</div><h4 class="element-recommend-title">' + t[item[0]] + '</h4><p class="element-recommend-text">' + t[item[1]] + '</p></article>').join('');
+  }
+  function applyI18n(){
+    const params = getParams();
+    const theme = getTheme(params);
+    const lang = getLang(params);
+    const all = JSON.parse(document.getElementById('i18n-data').textContent);
+    const t = all[lang] || all.en;
+    document.body.dataset.theme = theme;
+    document.documentElement.lang = lang === 'zhHans' ? 'zh-CN' : lang === 'zhHant' ? 'zh-Hant' : lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    document.title = t.title;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if(t[key]) el.textContent = t[key];
+    });
+    renderAreas(lang,t);
+    renderRecommends(t);
+  }
+  applyI18n();
+</script>
+</body>
+</html>
