@@ -9,6 +9,7 @@
   var runtimeVersion = runtimeUrl ? runtimeUrl.search : "";
   var root = document.documentElement;
   var params = new URLSearchParams(window.location.search || "");
+  var defaultLanguage = runtimeScript ? runtimeScript.getAttribute("data-conso-share-default-language") : "";
 
   var localizedCopy = {
     en: {
@@ -53,7 +54,7 @@
   }
 
   function getLocalizedCopy() {
-    var requestedLanguage = params.get("language") || params.get("lang") || document.documentElement.lang || window.navigator.language;
+    var requestedLanguage = params.get("language") || params.get("lang") || defaultLanguage || document.documentElement.lang || window.navigator.language;
     return localizedCopy[normalizeLocale(requestedLanguage)] || localizedCopy.en;
   }
 
