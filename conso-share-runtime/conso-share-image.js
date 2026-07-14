@@ -224,29 +224,14 @@
   function capturePage(captureMode) {
     if (typeof window.html2canvas !== "function") return Promise.reject(new ShareError("CAPTURE_LIBRARY_UNAVAILABLE", "The embedded image capture library is unavailable."));
     var body = document.body;
-    var root = document.documentElement;
     var captureTarget = document.querySelector("[data-conso-share-content], .page-container, main") || body;
-    var previousTheme = root.getAttribute("data-theme");
-    var previousBodyTheme = body.getAttribute("data-theme");
-    var hadBodyDarkClass = body.classList.contains("theme-dark");
-    var hiddenRuntimeNodes = Array.prototype.slice.call(document.querySelectorAll("[data-conso-share-entry], [data-conso-restricted-modal], .conso-share-floating"));
-    var previousRuntimeDisplay = hiddenRuntimeNodes.map(function (node) {
-      return { node: node, value: node.style.getPropertyValue("display"), priority: node.style.getPropertyPriority("display") };
-    });
-    root.setAttribute("data-theme", "dark");
-    body.setAttribute("data-theme", "dark");
-    body.classList.add("theme-dark");
-    hiddenRuntimeNodes.forEach(function (node) { node.style.setProperty("display", "none", "important"); });
-    function restoreTheme() {
-      if (previousTheme === null) root.removeAttribute("data-theme");
-      else root.setAttribute("data-theme", previousTheme);
-      if (previousBodyTheme === null) body.removeAttribute("data-theme");
-      else body.setAttribute("data-theme", previousBodyTheme);
-      body.classList.toggle("theme-dark", hadBodyDarkClass);
-      previousRuntimeDisplay.forEach(function (item) {
-        if (item.value) item.node.style.setProperty("display", item.value, item.priority);
-        else item.node.style.removeProperty("display");
-      });
+    var captureBackgroundColor = "#10131A";
+    function getCaptureBackgroundColor(candidates, clonedWindow) {
+      for (var index = 0; index < candidates.length; index += 1) {
+        var color = clonedWindow.getComputedStyle(candidates[index]).backgroundColor;
+        if (color && color !== "transparent" && color !== "rgba(0, 0, 0, 0)") return color;
+      }
+      return "#10131A";
     }
     var targetRect = captureTarget.getBoundingClientRect();
     var targetWidth = Math.max(1, Math.round(targetRect.width || captureTarget.clientWidth || window.innerWidth));
@@ -257,6 +242,23 @@
       allowTaint: false,
       scale: Math.max(2, Math.ceil(window.devicePixelRatio || 1)),
       logging: false,
+      // Apply the share-only dark theme in html2canvas's clone so the live H5 never flashes.
+      onclone: function (clonedDocument) {
+        var clonedRoot = clonedDocument.documentElement;
+        var clonedBody = clonedDocument.body;
+        var clonedTarget = clonedDocument.querySelector("[data-conso-share-content], .page-container, main") || clonedBody;
+        clonedRoot.setAttribute("data-theme", "dark");
+        clonedBody.setAttribute("data-theme", "dark");
+        clonedBody.classList.add("theme-dark");
+        Array.prototype.forEach.call(clonedDocument.querySelectorAll("[data-conso-share-entry], [data-conso-restricted-modal], .conso-share-floating"), function (node) {
+          node.style.setProperty("display", "none", "important");
+        });
+        captureBackgroundColor = getCaptureBackgroundColor([clonedTarget, clonedBody, clonedRoot], clonedDocument.defaultView);
+        // Prevent transparent page areas in the capture from revealing the poster texture below.
+        [clonedRoot, clonedBody, clonedTarget].forEach(function (node) {
+          node.style.setProperty("background-color", captureBackgroundColor, "important");
+        });
+      },
       ignoreElements: function (element) {
         return Boolean(element && element.closest && element.closest("[data-conso-share-entry], [data-conso-restricted-modal], .conso-share-floating"));
       }
@@ -278,13 +280,9 @@
     }
     return window.html2canvas(captureTarget, options).then(function (canvas) {
       return canvasToBlob(canvas).then(function (blob) {
-        return { blob: blob, canvas: canvas, width: canvas.width, height: canvas.height, posterCapture: false };
+        return { blob: blob, canvas: canvas, width: canvas.width, height: canvas.height, posterCapture: false, pageBackgroundColor: captureBackgroundColor };
       });
-    }).then(function (captured) {
-      restoreTheme();
-      return captured;
     }).catch(function (error) {
-      restoreTheme();
       if (error instanceof ShareError) throw error;
       throw new ShareError("CAPTURE_FAILED", error && error.message ? error.message : "Unable to capture the page.");
     });
@@ -428,58 +426,72 @@
     context.drawImage(captured.canvas, sourceX, 0, sourceWidth, sourceHeight, x, y, width, height);
     context.restore();
   }
-  function drawBlurAndDarkenOverlay(context, canvas, topY, width, height) {
-    var regionHeight = height - topY;
+  function toAlphaColor(color, alpha) {
+    var value = String(color || "#10131A").trim();
+    var rgb = value.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+    if (rgb) return "rgba(" + rgb[1] + ", " + rgb[2] + ", " + rgb[3] + ", " + alpha + ")";
+    var hex = value.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+    if (hex) {
+      var normalized = hex[1].length === 3
+        ? hex[1].split("").map(function (part) { return part + part; }).join("")
+        : hex[1];
+      return "rgba(" + parseInt(normalized.slice(0, 2), 16) + ", " + parseInt(normalized.slice(2, 4), 16) + ", " + alpha + ")";
+    }
+    return "rgba(16, 19, 26, " + alpha + ")";
+  }
+  function drawBlurAndDarkenOverlay(context, canvas, x, topY, width, regionHeight, pageBackgroundColor) {
     var region = document.createElement("canvas");
     region.width = width;
     region.height = regionHeight;
-    region.getContext("2d").drawImage(canvas, 0, topY, width, regionHeight, 0, 0, width, regionHeight);
+    region.getContext("2d").drawImage(canvas, x, topY, width, regionHeight, 0, 0, width, regionHeight);
     context.save();
-    context.filter = "blur(10px)";
-    context.drawImage(region, 0, topY);
+    context.filter = "blur(8px)";
+    context.drawImage(region, x, topY);
     context.restore();
-    // Keep the captured content visible under the guide, then fade it into the black footer.
-    var gradient = context.createLinearGradient(0, topY, 0, height);
-    gradient.addColorStop(0, "rgba(0, 0, 0, 0.04)");
-    gradient.addColorStop(0.34, "rgba(0, 0, 0, 0.30)");
-    gradient.addColorStop(1, "rgba(0, 0, 0, 0.72)");
+    // Match the 72px mobile guide with the page background color, not a separate black layer.
+    var gradient = context.createLinearGradient(0, topY, 0, topY + regionHeight);
+    gradient.addColorStop(0, toAlphaColor(pageBackgroundColor, 0));
+    gradient.addColorStop(0.7, toAlphaColor(pageBackgroundColor, 0.7));
+    gradient.addColorStop(1, toAlphaColor(pageBackgroundColor, 1));
     context.fillStyle = gradient;
-    context.fillRect(0, topY, width, regionHeight);
+    context.fillRect(x, topY, width, regionHeight);
   }
-  function drawBottomSheet(context, options, logo, copy) {
+  function drawBottomSheet(context, options, logo, copy, pageBackgroundColor, dividerY, posterHeight, promptHeight) {
     var width = 750;
     var pagePadding = 40;
-    var dividerY = 1120;
     var prompt = copy.posterPrompt;
-    context.font = "600 18px -apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif";
-    var promptWidth = context.measureText(prompt).width + 22;
-    var promptX = Math.round((width - promptWidth) / 2);
-    var promptBaseline = dividerY - 30;
-    drawSpark(context, promptX + 6, promptBaseline - 7, 6, "#44d564");
+    var sparkRadius = 10;
+    var sparkWidth = 30;
+    var promptGap = 14;
+    context.font = "600 30px -apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif";
+    var promptTextWidth = context.measureText(prompt).width;
+    var promptX = Math.round((width - sparkWidth - promptGap - promptTextWidth) / 2);
+    var promptBaseline = dividerY - promptHeight + Math.round((promptHeight + 30) / 2) - 6;
+    drawSpark(context, promptX + sparkRadius, dividerY - Math.round(promptHeight / 2), sparkRadius, "#44d564");
     context.fillStyle = "#44d564";
-    context.fillText(prompt, promptX + 22, promptBaseline);
+    context.fillText(prompt, promptX + sparkWidth + promptGap, promptBaseline);
 
-    context.fillStyle = "#000000";
-    context.fillRect(0, dividerY + 1, width, 1334 - dividerY - 1);
+    context.fillStyle = pageBackgroundColor || "#10131A";
+    context.fillRect(0, dividerY + 1, width, posterHeight - dividerY - 1);
     context.fillStyle = "#303030";
     context.fillRect(pagePadding, dividerY, width - pagePadding * 2, 1);
 
-    var qrBoxSize = 144;
-    var qrPadding = 12;
+    var qrBoxSize = 170;
+    var qrPadding = 14;
     var qrSize = qrBoxSize - qrPadding * 2;
     var qrX = width - pagePadding - qrBoxSize;
     // Align the QR card with the enlarged footer copy while preserving a compact bottom margin.
-    var qrY = dividerY + 36;
+    var qrY = dividerY + 22;
     var copyX = pagePadding + 18;
     // Keep the copy and logo vertically centered against the QR card.
-    var copyY = dividerY + 78;
+    var copyY = dividerY + 92;
     context.fillStyle = "#f5f7f5";
     var footerText = copy.posterFooter;
-    var footerFontSize = 22;
+    var footerFontSize = 30;
     do {
       context.font = "600 " + footerFontSize + "px -apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif";
       footerFontSize -= 1;
-    } while (footerFontSize > 15 && context.measureText(footerText).width > qrX - copyX - 18);
+    } while (footerFontSize > 20 && context.measureText(footerText).width > qrX - copyX - 18);
     context.fillText(footerText, copyX, copyY);
     if (logo) context.drawImage(logo, copyX, copyY + 14, 64, 37);
     else drawFallbackBrandLogo(context, copyX + 32, copyY + 33, 18);
@@ -495,15 +507,20 @@
   }
   function composeSharePoster(captured, options) {
     var posterWidth = 750;
-    var posterHeight = 1334;
     // Community poster content uses half of the previous side inset for a fuller preview.
     var pagePadding = 20;
     // Java uses the same 16% share texture as the poster base; reserve a visible header area for it.
     var contentY = 160;
-    // Keep the capture behind the CTA so the guide can blur visible page content.
-    var contentHeight = 960;
-    // Only keep a narrow blurred guide behind the CTA: 32px above and 30px below its baseline.
-    var blurTopY = 1058;
+    var contentWidth = posterWidth - pagePadding * 2;
+    // Preserve the captured mobile viewport ratio so the poster always shows one complete phone screen.
+    var contentHeight = Math.max(1, Math.round(contentWidth * captured.height / captured.width));
+    var dividerY = contentY + contentHeight;
+    var posterHeight = dividerY + 214;
+    // The source texture occupies the top 354px of the phone design, not the entire poster.
+    var backgroundHeight = 708;
+    // 72px on the phone design, scaled to the 2x poster canvas.
+    var blurHeight = 144;
+    var blurTopY = dividerY - blurHeight;
     var canvas = document.createElement("canvas");
     var context = canvas.getContext("2d");
     canvas.width = posterWidth;
@@ -520,18 +537,18 @@
       var background = images[0];
       var logo = images[1];
       var copy = getLocalizedCopy();
-      context.fillStyle = "#000000";
+      context.fillStyle = captured.pageBackgroundColor || "#10131A";
       context.fillRect(0, 0, posterWidth, posterHeight);
       if (background) {
         context.save();
         context.globalAlpha = 0.16;
-        drawCoverImage(context, background, 0, 0, posterWidth, posterHeight);
+        drawCoverImage(context, background, 0, 0, posterWidth, backgroundHeight);
         context.restore();
       }
       drawPosterHeader(context, logo, getPosterTitle(options), copy);
-      drawCapturedContent(context, captured, pagePadding, contentY, posterWidth - pagePadding * 2, contentHeight);
-      drawBlurAndDarkenOverlay(context, canvas, blurTopY, posterWidth, posterHeight);
-      drawBottomSheet(context, options, logo, copy);
+      drawCapturedContent(context, captured, pagePadding, contentY, contentWidth, contentHeight);
+      drawBlurAndDarkenOverlay(context, canvas, pagePadding, blurTopY, contentWidth, blurHeight, captured.pageBackgroundColor);
+      drawBottomSheet(context, options, logo, copy, captured.pageBackgroundColor, dividerY, posterHeight, blurHeight);
       return canvasToBlob(canvas).then(function (blob) {
         return { blob: blob, canvas: canvas, width: posterWidth, height: posterHeight };
       });
