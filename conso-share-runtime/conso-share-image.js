@@ -392,8 +392,8 @@
       context.fill();
     }
     context.fillStyle = color;
-    star(centerX, centerY, radius, Math.max(2, Math.floor(radius * 0.38)));
-    star(centerX + radius + 5, centerY - radius, Math.max(2, Math.floor(radius / 2)), 1);
+    star(centerX - Math.round(radius * 0.55), centerY - Math.round(radius * 0.5), Math.max(2, Math.floor(radius / 2)), 1);
+    star(centerX + Math.round(radius * 0.45), centerY + Math.round(radius * 0.35), radius, Math.max(2, Math.floor(radius * 0.38)));
   }
   function drawPosterHeader(context, logo, title, copy) {
     var tagX = 40;
@@ -435,7 +435,7 @@
       var normalized = hex[1].length === 3
         ? hex[1].split("").map(function (part) { return part + part; }).join("")
         : hex[1];
-      return "rgba(" + parseInt(normalized.slice(0, 2), 16) + ", " + parseInt(normalized.slice(2, 4), 16) + ", " + alpha + ")";
+      return "rgba(" + parseInt(normalized.slice(0, 2), 16) + ", " + parseInt(normalized.slice(2, 4), 16) + ", " + parseInt(normalized.slice(4, 6), 16) + ", " + alpha + ")";
     }
     return "rgba(16, 19, 26, " + alpha + ")";
   }
@@ -467,7 +467,7 @@
     var promptTextWidth = context.measureText(prompt).width;
     var promptX = Math.round((width - sparkWidth - promptGap - promptTextWidth) / 2);
     var promptBaseline = dividerY - promptHeight + Math.round((promptHeight + 30) / 2) - 6;
-    drawSpark(context, promptX + sparkRadius, dividerY - Math.round(promptHeight / 2), sparkRadius, "#44d564");
+    drawSpark(context, promptX + Math.round(sparkWidth / 2), dividerY - Math.round(promptHeight / 2), sparkRadius, "#44d564");
     context.fillStyle = "#44d564";
     context.fillText(prompt, promptX + sparkWidth + promptGap, promptBaseline);
 
