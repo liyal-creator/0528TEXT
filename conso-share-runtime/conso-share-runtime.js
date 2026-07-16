@@ -159,6 +159,8 @@
     return loadScript("html2canvas.min.js")
       .then(function () { return loadScript("conso-share-widget.js"); })
       .then(function () { return loadScript("qrcode.js"); })
+      .then(function () { return loadScript("protobuf.min.js"); })
+      .then(function () { return loadScript("h5_share_bridge_pb.js"); })
       .then(function () { return loadScript("conso-share-image.js"); })
       .catch(function (error) {
         console.error("[ConsoShareRuntime]", error);

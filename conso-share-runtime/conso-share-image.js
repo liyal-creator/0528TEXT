@@ -44,8 +44,7 @@
     var value = String((options && options.captureMode) || getMeta("conso-share-capture-mode") || "viewport").toLowerCase();
     return value === "full" ? "full" : "viewport";
   }
-  function sendBridge(eventName, payload) {
-    var eventData = JSON.stringify(payload || {});
+  function sendBridgeData(eventName, eventData) {
     try {
       if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.performAction) {
         window.webkit.messageHandlers.performAction.postMessage({ eventName: eventName, eventData: eventData });
@@ -57,6 +56,18 @@
       }
     } catch (error) { return false; }
     return false;
+  }
+  function sendBridge(eventName, payload) {
+    return sendBridgeData(eventName, JSON.stringify(payload || {}));
+  }
+  function sendBridgeProtobuf(eventName, messageName, payload) {
+    return sendBridgeData(eventName, bytesToBase64(encodeBridgeMessage(messageName, payload)));
+  }
+  function notifyShareButtonVisibility() {
+    sendBridgeProtobuf("shareButtonVisibility", "H5ShareButtonVisibility", {
+      version: 1,
+      showShareButton: !!getMeta("conso-share-resource-id")
+    });
   }
   function settleTokenWaiters(token) {
     tokenWaiters.splice(0).forEach(function (waiter) {
@@ -112,6 +123,34 @@
     if (wireType === 0) return concatBytes([tag, encodeVarint(value)]);
     var bytes = value instanceof Uint8Array ? value : new TextEncoder().encode(String(value));
     return concatBytes([tag, encodeVarint(bytes.length), bytes]);
+  }
+  function bytesToBase64(bytes) {
+    var binary = "";
+    for (var index = 0; index < bytes.length; index += 1) binary += String.fromCharCode(bytes[index]);
+    return window.btoa(binary);
+  }
+  function base64ToBytes(value) {
+    var normalized = String(value || "").replace(/\s/g, "").replace(/-/g, "+").replace(/_/g, "/");
+    while (normalized.length % 4) normalized += "=";
+    var binary = window.atob(normalized);
+    var bytes = new Uint8Array(binary.length);
+    for (var index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+    return bytes;
+  }
+  function getBridgeMessage(messageName) {
+    var protobuf = window.protobuf;
+    var root = protobuf && protobuf.roots && protobuf.roots.default;
+    var message = root && root.pb && root.pb[messageName];
+    if (!message) throw new ShareError("BRIDGE_PROTO_UNAVAILABLE", "H5 share bridge protobuf is unavailable.");
+    return message;
+  }
+  function encodeBridgeMessage(messageName, payload) {
+    var message = getBridgeMessage(messageName);
+    return message.encode(message.create(payload || {})).finish();
+  }
+  function decodeBridgeMessage(messageName, encoded) {
+    var message = getBridgeMessage(messageName);
+    return message.decode(base64ToBytes(encoded));
   }
   function encodeUploadRequest(resourceId, language, imageData) {
     var fields = [encodeField(1, 0, 2), encodeField(2, 2, resourceId), encodeField(3, 2, language)];
@@ -619,28 +658,32 @@
       return { ok: true, width: captured.width, height: captured.height };
     });
   }
-  function generate(options) {
-    options = options || {};
+  function emitShareResult(result) {
+    sendBridgeProtobuf("shareImageResult", "H5ShareGenerateResponse", result);
+    return result;
+  }
+  function generate(input) {
+    var options;
+    try {
+      options = typeof input === "string" ? decodeBridgeMessage("H5ShareGenerateRequest", input) : (input || {});
+    } catch (error) {
+      return Promise.resolve(emitShareResult({ requestId: "", ok: false, errorCode: "REQUEST_DECODE_FAILED", errorMessage: error && error.message ? error.message : "Unable to decode share request." }));
+    }
     var requestId = options.requestId == null ? "" : String(options.requestId);
     var resourceId = getMeta("conso-share-resource-id");
     if (!resourceId) {
-      var missing = { requestId: requestId, ok: false, code: "RESOURCE_ID_MISSING", message: "This page has no share resource ID." };
-      sendBridge("shareImageResult", missing);
-      return Promise.resolve(missing);
+      return Promise.resolve(emitShareResult({ requestId: requestId, ok: false, errorCode: "RESOURCE_ID_MISSING", errorMessage: "This page has no share resource ID." }));
     }
     return capturePage(getCaptureMode(options)).then(function (captured) {
       return composeSharePoster(captured, options);
     }).then(function (captured) {
       return uploadImage(getApiBase(options), resourceId, getLanguage(options), captured).then(function (imageUrl) {
-        return { requestId: requestId, ok: true, imageUrl: imageUrl, width: captured.width, height: captured.height };
+        return { requestId: requestId, ok: true, imageUrl: imageUrl, shareUrl: getShareLink(options), width: captured.width, height: captured.height };
       });
     }).then(function (result) {
-      sendBridge("shareImageResult", result);
-      return result;
+      return emitShareResult(result);
     }).catch(function (error) {
-      var result = { requestId: requestId, ok: false, code: error && error.code ? error.code : "SHARE_FAILED", message: error && error.message ? error.message : "Unable to generate the share image." };
-      sendBridge("shareImageResult", result);
-      return result;
+      return emitShareResult({ requestId: requestId, ok: false, errorCode: error && error.code ? error.code : "SHARE_FAILED", errorMessage: error && error.message ? error.message : "Unable to generate the share image." });
     });
   }
 
@@ -648,6 +691,7 @@
   api.generate = generate;
   api.preview = preview;
   window.ConsoH5Share = api;
+  notifyShareButtonVisibility();
   if (getParam("shareImagePreview") === "1") {
     window.setTimeout(function () { preview().catch(showPreviewError); }, 0);
   }
