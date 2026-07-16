@@ -693,9 +693,9 @@
     return result;
   };
   window.shareImageResult = function (payload) {
-    var result = generate(payload);
+    generate(payload);
     if (typeof previousShareImageResult === "function") previousShareImageResult.apply(this, arguments);
-    return result;
+    return true;
   };
   if (getParam("shareImagePreview") === "1") {
     window.setTimeout(function () { preview().catch(showPreviewError); }, 0);
