@@ -4,11 +4,11 @@
   var PRODUCT_ID = "802";
   var TOKEN_TIMEOUT_MS = 8000;
   var previousTokenInit = window.tokenInit;
-  var previousShareButtonVisibility = window.shareButtonVisibility;
-  var previousShareImageResult = window.shareImageResult;
   var memoryToken = "";
   var tokenWaiters = [];
   var tokenWarmUpStarted = false;
+  var shareGenerationInFlight = false;
+  var shareGenerationSequence = 0;
 
   function ShareError(code, message) {
     this.name = "ShareError";
@@ -47,6 +47,14 @@
     var value = String((options && options.captureMode) || getMeta("conso-share-capture-mode") || "viewport").toLowerCase();
     return value === "full" ? "full" : "viewport";
   }
+  function isDebugEnabled() {
+    var value = String(getParam("consoShareDebug") || getMeta("conso-share-debug") || "").toLowerCase();
+    return value === "1" || value === "true" || value === "yes";
+  }
+  function debugLog(stage, data) {
+    if (!isDebugEnabled() || !window.console || typeof window.console.info !== "function") return;
+    window.console.info("[ConsoShare] " + stage, data || {});
+  }
   function sendBridgeData(eventName, eventData) {
     try {
       if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.performAction) {
@@ -81,7 +89,9 @@
     var normalized = String(token || "").trim();
     if (normalized) {
       memoryToken = normalized;
+      var waiterCount = tokenWaiters.length;
       settleTokenWaiters(normalized);
+      debugLog("token.received", { waiterCount: waiterCount });
     }
     if (typeof previousTokenInit === "function") return previousTokenInit.apply(this, arguments);
     return undefined;
@@ -667,20 +677,28 @@
       return { ok: true, width: captured.width, height: captured.height };
     });
   }
-  function emitShareResult(result) {
-    sendBridgeProtobuf("shareImageResult", "H5ShareGenerateResponse", result);
+  function emitShareResult(result, generationId) {
+    var sent = sendBridgeProtobuf("shareImageResult", "H5ShareGenerateResponse", result);
+    debugLog("generate.result", {
+      generationId: generationId,
+      errCode: result && result.errCode,
+      sent: sent,
+      hasImageUrl: Boolean(result && result.imageUrl)
+    });
     return result;
   }
-  function generate(payload) {
+  function generate(payload, generationId) {
+    var request;
     try {
-      decodeBridgeMessage("H5ShareGenerateRequest", payload);
+      request = decodeBridgeMessage("H5ShareGenerateRequest", payload);
     } catch (error) {
-      return Promise.resolve(emitShareResult({ errCode: 1, errMsg: "Invalid H5 share request." }));
+      return Promise.resolve(emitShareResult({ errCode: 1, errMsg: "Invalid H5 share request." }, generationId));
     }
+    debugLog("generate.start", { generationId: generationId, requestId: request && request.requestId ? request.requestId : "" });
     var options = {};
     var resourceId = getMeta("conso-share-resource-id");
     if (!resourceId) {
-      return Promise.resolve(emitShareResult({ errCode: 2, errMsg: "This page has no share resource ID." }));
+      return Promise.resolve(emitShareResult({ errCode: 2, errMsg: "This page has no share resource ID." }, generationId));
     }
     return capturePage(getCaptureMode(options)).then(function (captured) {
       return composeSharePoster(captured, options);
@@ -689,9 +707,9 @@
         return { errCode: 0, imageUrl: imageUrl, shareUrl: getShareLink(options), width: captured.width, height: captured.height };
       });
     }).then(function (result) {
-      return emitShareResult(result);
+      return emitShareResult(result, generationId);
     }).catch(function (error) {
-      return emitShareResult({ errCode: 3, errMsg: error && error.message ? error.message : "Unable to generate the share image." });
+      return emitShareResult({ errCode: 3, errMsg: error && error.message ? error.message : "Unable to generate the share image." }, generationId);
     });
   }
 
@@ -699,12 +717,21 @@
     // 分享按钮初始化时预取 token，避免用户点击分享后再等待原生桥接返回。
     warmUpToken();
     var result = getShareButtonVisibilityPayload();
-    if (typeof previousShareButtonVisibility === "function") previousShareButtonVisibility.apply(this, arguments);
+    debugLog("visibility.result", { showShareButton: Boolean(getMeta("conso-share-resource-id")) });
     return result;
   };
   window.shareImageResult = function (payload) {
-    generate(payload);
-    if (typeof previousShareImageResult === "function") previousShareImageResult.apply(this, arguments);
+    if (shareGenerationInFlight) {
+      debugLog("generate.ignored", { reason: "in_flight" });
+      return true;
+    }
+    shareGenerationInFlight = true;
+    var generationId = ++shareGenerationSequence;
+    generate(payload, generationId).then(function () {
+      shareGenerationInFlight = false;
+    }, function () {
+      shareGenerationInFlight = false;
+    });
     return true;
   };
   if (getParam("shareImagePreview") === "1") {
