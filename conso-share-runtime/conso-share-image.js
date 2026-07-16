@@ -65,7 +65,6 @@
   }
   function notifyShareButtonVisibility() {
     sendBridgeProtobuf("shareButtonVisibility", "H5ShareButtonVisibility", {
-      version: 1,
       showShareButton: !!getMeta("conso-share-resource-id")
     });
   }
@@ -667,23 +666,22 @@
     try {
       options = typeof input === "string" ? decodeBridgeMessage("H5ShareGenerateRequest", input) : (input || {});
     } catch (error) {
-      return Promise.resolve(emitShareResult({ requestId: "", ok: false, errorCode: "REQUEST_DECODE_FAILED", errorMessage: error && error.message ? error.message : "Unable to decode share request." }));
+      return Promise.resolve(emitShareResult({ errCode: 1, errMsg: error && error.message ? error.message : "Unable to decode share request." }));
     }
-    var requestId = options.requestId == null ? "" : String(options.requestId);
     var resourceId = getMeta("conso-share-resource-id");
     if (!resourceId) {
-      return Promise.resolve(emitShareResult({ requestId: requestId, ok: false, errorCode: "RESOURCE_ID_MISSING", errorMessage: "This page has no share resource ID." }));
+      return Promise.resolve(emitShareResult({ errCode: 2, errMsg: "This page has no share resource ID." }));
     }
     return capturePage(getCaptureMode(options)).then(function (captured) {
       return composeSharePoster(captured, options);
     }).then(function (captured) {
       return uploadImage(getApiBase(options), resourceId, getLanguage(options), captured).then(function (imageUrl) {
-        return { requestId: requestId, ok: true, imageUrl: imageUrl, shareUrl: getShareLink(options), width: captured.width, height: captured.height };
+        return { errCode: 0, imageUrl: imageUrl, shareUrl: getShareLink(options), width: captured.width, height: captured.height };
       });
     }).then(function (result) {
       return emitShareResult(result);
     }).catch(function (error) {
-      return emitShareResult({ requestId: requestId, ok: false, errorCode: error && error.code ? error.code : "SHARE_FAILED", errorMessage: error && error.message ? error.message : "Unable to generate the share image." });
+      return emitShareResult({ errCode: 3, errMsg: error && error.message ? error.message : "Unable to generate the share image." });
     });
   }
 

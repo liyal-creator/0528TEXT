@@ -23,7 +23,6 @@
              * Properties of a H5ShareButtonVisibility.
              * @memberof pb
              * @interface IH5ShareButtonVisibility
-             * @property {number|null} [version] H5ShareButtonVisibility version
              * @property {boolean|null} [showShareButton] H5ShareButtonVisibility showShareButton
              */
     
@@ -41,14 +40,6 @@
                         if (properties[keys[i]] != null)
                             this[keys[i]] = properties[keys[i]];
             }
-    
-            /**
-             * H5ShareButtonVisibility version.
-             * @member {number} version
-             * @memberof pb.H5ShareButtonVisibility
-             * @instance
-             */
-            H5ShareButtonVisibility.prototype.version = 0;
     
             /**
              * H5ShareButtonVisibility showShareButton.
@@ -82,10 +73,8 @@
             H5ShareButtonVisibility.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
-                if (message.version != null && Object.hasOwnProperty.call(message, "version"))
-                    writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.version);
                 if (message.showShareButton != null && Object.hasOwnProperty.call(message, "showShareButton"))
-                    writer.uint32(/* id 2, wireType 0 =*/16).bool(message.showShareButton);
+                    writer.uint32(/* id 1, wireType 0 =*/8).bool(message.showShareButton);
                 return writer;
             };
     
@@ -121,10 +110,6 @@
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
                     case 1: {
-                            message.version = reader.uint32();
-                            break;
-                        }
-                    case 2: {
                             message.showShareButton = reader.bool();
                             break;
                         }
@@ -163,9 +148,6 @@
             H5ShareButtonVisibility.verify = function verify(message) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (message.version != null && message.hasOwnProperty("version"))
-                    if (!$util.isInteger(message.version))
-                        return "version: integer expected";
                 if (message.showShareButton != null && message.hasOwnProperty("showShareButton"))
                     if (typeof message.showShareButton !== "boolean")
                         return "showShareButton: boolean expected";
@@ -184,8 +166,6 @@
                 if (object instanceof $root.pb.H5ShareButtonVisibility)
                     return object;
                 var message = new $root.pb.H5ShareButtonVisibility();
-                if (object.version != null)
-                    message.version = object.version >>> 0;
                 if (object.showShareButton != null)
                     message.showShareButton = Boolean(object.showShareButton);
                 return message;
@@ -204,12 +184,8 @@
                 if (!options)
                     options = {};
                 var object = {};
-                if (options.defaults) {
-                    object.version = 0;
+                if (options.defaults)
                     object.showShareButton = false;
-                }
-                if (message.version != null && message.hasOwnProperty("version"))
-                    object.version = message.version;
                 if (message.showShareButton != null && message.hasOwnProperty("showShareButton"))
                     object.showShareButton = message.showShareButton;
                 return object;
@@ -453,14 +429,12 @@
              * Properties of a H5ShareGenerateResponse.
              * @memberof pb
              * @interface IH5ShareGenerateResponse
-             * @property {string|null} [requestId] H5ShareGenerateResponse requestId
-             * @property {boolean|null} [ok] H5ShareGenerateResponse ok
+             * @property {number|null} [errCode] H5ShareGenerateResponse errCode
              * @property {string|null} [imageUrl] H5ShareGenerateResponse imageUrl
              * @property {string|null} [shareUrl] H5ShareGenerateResponse shareUrl
              * @property {number|null} [width] H5ShareGenerateResponse width
              * @property {number|null} [height] H5ShareGenerateResponse height
-             * @property {string|null} [errorCode] H5ShareGenerateResponse errorCode
-             * @property {string|null} [errorMessage] H5ShareGenerateResponse errorMessage
+             * @property {string|null} [errMsg] H5ShareGenerateResponse errMsg
              */
     
             /**
@@ -479,20 +453,12 @@
             }
     
             /**
-             * H5ShareGenerateResponse requestId.
-             * @member {string} requestId
+             * H5ShareGenerateResponse errCode.
+             * @member {number} errCode
              * @memberof pb.H5ShareGenerateResponse
              * @instance
              */
-            H5ShareGenerateResponse.prototype.requestId = "";
-    
-            /**
-             * H5ShareGenerateResponse ok.
-             * @member {boolean} ok
-             * @memberof pb.H5ShareGenerateResponse
-             * @instance
-             */
-            H5ShareGenerateResponse.prototype.ok = false;
+            H5ShareGenerateResponse.prototype.errCode = 0;
     
             /**
              * H5ShareGenerateResponse imageUrl.
@@ -527,20 +493,12 @@
             H5ShareGenerateResponse.prototype.height = 0;
     
             /**
-             * H5ShareGenerateResponse errorCode.
-             * @member {string} errorCode
+             * H5ShareGenerateResponse errMsg.
+             * @member {string} errMsg
              * @memberof pb.H5ShareGenerateResponse
              * @instance
              */
-            H5ShareGenerateResponse.prototype.errorCode = "";
-    
-            /**
-             * H5ShareGenerateResponse errorMessage.
-             * @member {string} errorMessage
-             * @memberof pb.H5ShareGenerateResponse
-             * @instance
-             */
-            H5ShareGenerateResponse.prototype.errorMessage = "";
+            H5ShareGenerateResponse.prototype.errMsg = "";
     
             /**
              * Creates a new H5ShareGenerateResponse instance using the specified properties.
@@ -566,22 +524,18 @@
             H5ShareGenerateResponse.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
-                if (message.requestId != null && Object.hasOwnProperty.call(message, "requestId"))
-                    writer.uint32(/* id 1, wireType 2 =*/10).string(message.requestId);
-                if (message.ok != null && Object.hasOwnProperty.call(message, "ok"))
-                    writer.uint32(/* id 2, wireType 0 =*/16).bool(message.ok);
+                if (message.errCode != null && Object.hasOwnProperty.call(message, "errCode"))
+                    writer.uint32(/* id 1, wireType 0 =*/8).int32(message.errCode);
                 if (message.imageUrl != null && Object.hasOwnProperty.call(message, "imageUrl"))
-                    writer.uint32(/* id 3, wireType 2 =*/26).string(message.imageUrl);
+                    writer.uint32(/* id 2, wireType 2 =*/18).string(message.imageUrl);
                 if (message.shareUrl != null && Object.hasOwnProperty.call(message, "shareUrl"))
-                    writer.uint32(/* id 4, wireType 2 =*/34).string(message.shareUrl);
+                    writer.uint32(/* id 3, wireType 2 =*/26).string(message.shareUrl);
                 if (message.width != null && Object.hasOwnProperty.call(message, "width"))
-                    writer.uint32(/* id 5, wireType 0 =*/40).uint32(message.width);
+                    writer.uint32(/* id 4, wireType 0 =*/32).uint32(message.width);
                 if (message.height != null && Object.hasOwnProperty.call(message, "height"))
-                    writer.uint32(/* id 6, wireType 0 =*/48).uint32(message.height);
-                if (message.errorCode != null && Object.hasOwnProperty.call(message, "errorCode"))
-                    writer.uint32(/* id 7, wireType 2 =*/58).string(message.errorCode);
-                if (message.errorMessage != null && Object.hasOwnProperty.call(message, "errorMessage"))
-                    writer.uint32(/* id 8, wireType 2 =*/66).string(message.errorMessage);
+                    writer.uint32(/* id 5, wireType 0 =*/40).uint32(message.height);
+                if (message.errMsg != null && Object.hasOwnProperty.call(message, "errMsg"))
+                    writer.uint32(/* id 6, wireType 2 =*/50).string(message.errMsg);
                 return writer;
             };
     
@@ -617,35 +571,27 @@
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
                     case 1: {
-                            message.requestId = reader.string();
+                            message.errCode = reader.int32();
                             break;
                         }
                     case 2: {
-                            message.ok = reader.bool();
-                            break;
-                        }
-                    case 3: {
                             message.imageUrl = reader.string();
                             break;
                         }
-                    case 4: {
+                    case 3: {
                             message.shareUrl = reader.string();
                             break;
                         }
-                    case 5: {
+                    case 4: {
                             message.width = reader.uint32();
                             break;
                         }
-                    case 6: {
+                    case 5: {
                             message.height = reader.uint32();
                             break;
                         }
-                    case 7: {
-                            message.errorCode = reader.string();
-                            break;
-                        }
-                    case 8: {
-                            message.errorMessage = reader.string();
+                    case 6: {
+                            message.errMsg = reader.string();
                             break;
                         }
                     default:
@@ -683,12 +629,9 @@
             H5ShareGenerateResponse.verify = function verify(message) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (message.requestId != null && message.hasOwnProperty("requestId"))
-                    if (!$util.isString(message.requestId))
-                        return "requestId: string expected";
-                if (message.ok != null && message.hasOwnProperty("ok"))
-                    if (typeof message.ok !== "boolean")
-                        return "ok: boolean expected";
+                if (message.errCode != null && message.hasOwnProperty("errCode"))
+                    if (!$util.isInteger(message.errCode))
+                        return "errCode: integer expected";
                 if (message.imageUrl != null && message.hasOwnProperty("imageUrl"))
                     if (!$util.isString(message.imageUrl))
                         return "imageUrl: string expected";
@@ -701,12 +644,9 @@
                 if (message.height != null && message.hasOwnProperty("height"))
                     if (!$util.isInteger(message.height))
                         return "height: integer expected";
-                if (message.errorCode != null && message.hasOwnProperty("errorCode"))
-                    if (!$util.isString(message.errorCode))
-                        return "errorCode: string expected";
-                if (message.errorMessage != null && message.hasOwnProperty("errorMessage"))
-                    if (!$util.isString(message.errorMessage))
-                        return "errorMessage: string expected";
+                if (message.errMsg != null && message.hasOwnProperty("errMsg"))
+                    if (!$util.isString(message.errMsg))
+                        return "errMsg: string expected";
                 return null;
             };
     
@@ -722,10 +662,8 @@
                 if (object instanceof $root.pb.H5ShareGenerateResponse)
                     return object;
                 var message = new $root.pb.H5ShareGenerateResponse();
-                if (object.requestId != null)
-                    message.requestId = String(object.requestId);
-                if (object.ok != null)
-                    message.ok = Boolean(object.ok);
+                if (object.errCode != null)
+                    message.errCode = object.errCode | 0;
                 if (object.imageUrl != null)
                     message.imageUrl = String(object.imageUrl);
                 if (object.shareUrl != null)
@@ -734,10 +672,8 @@
                     message.width = object.width >>> 0;
                 if (object.height != null)
                     message.height = object.height >>> 0;
-                if (object.errorCode != null)
-                    message.errorCode = String(object.errorCode);
-                if (object.errorMessage != null)
-                    message.errorMessage = String(object.errorMessage);
+                if (object.errMsg != null)
+                    message.errMsg = String(object.errMsg);
                 return message;
             };
     
@@ -755,19 +691,15 @@
                     options = {};
                 var object = {};
                 if (options.defaults) {
-                    object.requestId = "";
-                    object.ok = false;
+                    object.errCode = 0;
                     object.imageUrl = "";
                     object.shareUrl = "";
                     object.width = 0;
                     object.height = 0;
-                    object.errorCode = "";
-                    object.errorMessage = "";
+                    object.errMsg = "";
                 }
-                if (message.requestId != null && message.hasOwnProperty("requestId"))
-                    object.requestId = message.requestId;
-                if (message.ok != null && message.hasOwnProperty("ok"))
-                    object.ok = message.ok;
+                if (message.errCode != null && message.hasOwnProperty("errCode"))
+                    object.errCode = message.errCode;
                 if (message.imageUrl != null && message.hasOwnProperty("imageUrl"))
                     object.imageUrl = message.imageUrl;
                 if (message.shareUrl != null && message.hasOwnProperty("shareUrl"))
@@ -776,10 +708,8 @@
                     object.width = message.width;
                 if (message.height != null && message.hasOwnProperty("height"))
                     object.height = message.height;
-                if (message.errorCode != null && message.hasOwnProperty("errorCode"))
-                    object.errorCode = message.errorCode;
-                if (message.errorMessage != null && message.hasOwnProperty("errorMessage"))
-                    object.errorMessage = message.errorMessage;
+                if (message.errMsg != null && message.hasOwnProperty("errMsg"))
+                    object.errMsg = message.errMsg;
                 return object;
             };
     
