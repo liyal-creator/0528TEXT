@@ -4,6 +4,8 @@
   var PRODUCT_ID = "802";
   var TOKEN_TIMEOUT_MS = 8000;
   var previousTokenInit = window.tokenInit;
+  var previousShareButtonVisibility = window.shareButtonVisibility;
+  var previousShareImageResult = window.shareImageResult;
   var memoryToken = "";
   var tokenWaiters = [];
 
@@ -64,7 +66,7 @@
     return sendBridgeData(eventName, bytesToBase64(encodeBridgeMessage(messageName, payload)));
   }
   function notifyShareButtonVisibility() {
-    sendBridgeProtobuf("shareButtonVisibility", "H5ShareButtonVisibility", {
+    return sendBridgeProtobuf("shareButtonVisibility", "H5ShareButtonVisibility", {
       showShareButton: !!getMeta("conso-share-resource-id")
     });
   }
@@ -147,9 +149,9 @@
     var message = getBridgeMessage(messageName);
     return message.encode(message.create(payload || {})).finish();
   }
-  function decodeBridgeMessage(messageName, encoded) {
+  function decodeBridgeMessage(messageName, payload) {
     var message = getBridgeMessage(messageName);
-    return message.decode(base64ToBytes(encoded));
+    return message.decode(base64ToBytes(payload));
   }
   function encodeUploadRequest(resourceId, language, imageData) {
     var fields = [encodeField(1, 0, 2), encodeField(2, 2, resourceId), encodeField(3, 2, language)];
@@ -661,13 +663,13 @@
     sendBridgeProtobuf("shareImageResult", "H5ShareGenerateResponse", result);
     return result;
   }
-  function generate(input) {
-    var options;
+  function generate(payload) {
     try {
-      options = typeof input === "string" ? decodeBridgeMessage("H5ShareGenerateRequest", input) : (input || {});
+      decodeBridgeMessage("H5ShareGenerateRequest", payload);
     } catch (error) {
-      return Promise.resolve(emitShareResult({ errCode: 1, errMsg: error && error.message ? error.message : "Unable to decode share request." }));
+      return Promise.resolve(emitShareResult({ errCode: 1, errMsg: "Invalid H5 share request." }));
     }
+    var options = {};
     var resourceId = getMeta("conso-share-resource-id");
     if (!resourceId) {
       return Promise.resolve(emitShareResult({ errCode: 2, errMsg: "This page has no share resource ID." }));
@@ -685,11 +687,16 @@
     });
   }
 
-  var api = window.ConsoH5Share || {};
-  api.generate = generate;
-  api.preview = preview;
-  window.ConsoH5Share = api;
-  notifyShareButtonVisibility();
+  window.shareButtonVisibility = function () {
+    var result = notifyShareButtonVisibility();
+    if (typeof previousShareButtonVisibility === "function") previousShareButtonVisibility.apply(this, arguments);
+    return result;
+  };
+  window.shareImageResult = function (payload) {
+    var result = generate(payload);
+    if (typeof previousShareImageResult === "function") previousShareImageResult.apply(this, arguments);
+    return result;
+  };
   if (getParam("shareImagePreview") === "1") {
     window.setTimeout(function () { preview().catch(showPreviewError); }, 0);
   }
