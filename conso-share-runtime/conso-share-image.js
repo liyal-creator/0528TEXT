@@ -65,10 +65,10 @@
   function sendBridgeProtobuf(eventName, messageName, payload) {
     return sendBridgeData(eventName, bytesToBase64(encodeBridgeMessage(messageName, payload)));
   }
-  function notifyShareButtonVisibility() {
-    return sendBridgeProtobuf("shareButtonVisibility", "H5ShareButtonVisibility", {
+  function getShareButtonVisibilityPayload() {
+    return bytesToBase64(encodeBridgeMessage("H5ShareButtonVisibility", {
       showShareButton: !!getMeta("conso-share-resource-id")
-    });
+    }));
   }
   function settleTokenWaiters(token) {
     tokenWaiters.splice(0).forEach(function (waiter) {
@@ -688,7 +688,7 @@
   }
 
   window.shareButtonVisibility = function () {
-    var result = notifyShareButtonVisibility();
+    var result = getShareButtonVisibilityPayload();
     if (typeof previousShareButtonVisibility === "function") previousShareButtonVisibility.apply(this, arguments);
     return result;
   };
