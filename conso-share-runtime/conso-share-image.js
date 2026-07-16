@@ -8,6 +8,7 @@
   var previousShareImageResult = window.shareImageResult;
   var memoryToken = "";
   var tokenWaiters = [];
+  var tokenWarmUpStarted = false;
 
   function ShareError(code, message) {
     this.name = "ShareError";
@@ -89,6 +90,7 @@
     if (!forceRefresh && memoryToken) return Promise.resolve(memoryToken);
     if (forceRefresh) memoryToken = "";
     return new Promise(function (resolve, reject) {
+      var shouldRequestToken = tokenWaiters.length === 0;
       var waiter = { resolve: resolve, reject: reject };
       waiter.timer = window.setTimeout(function () {
         var index = tokenWaiters.indexOf(waiter);
@@ -96,8 +98,13 @@
         reject(new ShareError("TOKEN_TIMEOUT", "Timed out waiting for the Conso client token."));
       }, TOKEN_TIMEOUT_MS);
       tokenWaiters.push(waiter);
-      sendBridge("getClientWebToken", {});
+      if (shouldRequestToken) sendBridge("getClientWebToken", {});
     });
+  }
+  function warmUpToken() {
+    if (memoryToken || tokenWarmUpStarted) return;
+    tokenWarmUpStarted = true;
+    requestToken(false).catch(function () {});
   }
 
   function concatBytes(chunks) {
@@ -280,7 +287,8 @@
       backgroundColor: null,
       useCORS: true,
       allowTaint: false,
-      scale: Math.max(2, Math.ceil(window.devicePixelRatio || 1)),
+      // 海报最终宽度固定为 750px，3x 截图随后缩放属于无效计算，统一使用 2x 保持清晰度。
+      scale: 2,
       logging: false,
       // Apply the share-only dark theme in html2canvas's clone so the live H5 never flashes.
       onclone: function (clonedDocument) {
@@ -688,6 +696,8 @@
   }
 
   window.shareButtonVisibility = function () {
+    // 分享按钮初始化时预取 token，避免用户点击分享后再等待原生桥接返回。
+    warmUpToken();
     var result = getShareButtonVisibilityPayload();
     if (typeof previousShareButtonVisibility === "function") previousShareButtonVisibility.apply(this, arguments);
     return result;
