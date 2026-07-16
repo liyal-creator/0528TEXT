@@ -26,7 +26,7 @@
     return String(new URLSearchParams(window.location.search || "").get(name) || "").trim();
   }
   function getApiBase(options) {
-    var value = String((options && options.apiBase) || getParam("apiBase") || "").trim();
+    var value = String((options && options.apiBase) || getParam("apiBase") || getMeta("conso-share-api-base") || "").trim();
     if (value) return value.replace(/\/+$/, "");
     return /test/i.test(window.location.host || "") ? "https://testapinew.conso.network" : "https://api.conso.network";
   }
