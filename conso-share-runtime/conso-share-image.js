@@ -51,9 +51,38 @@
     var value = String(getParam("consoShareDebug") || getMeta("conso-share-debug") || "").toLowerCase();
     return value === "1" || value === "true" || value === "yes";
   }
+  function now() {
+    return window.performance && typeof window.performance.now === "function" ? window.performance.now() : Date.now();
+  }
+  function elapsedMs(startedAt) {
+    return Math.max(0, Math.round(now() - startedAt));
+  }
+  function getDebugPanel() {
+    if (!isDebugEnabled()) return null;
+    var panel = document.querySelector("[data-conso-share-debug]");
+    if (panel) return panel;
+    panel = document.createElement("div");
+    panel.setAttribute("data-conso-share-debug", "");
+    panel.style.cssText = "position:fixed;z-index:2147483647;left:12px;right:12px;bottom:12px;max-height:42vh;overflow:auto;box-sizing:border-box;padding:10px 12px;border-radius:8px;background:rgba(0,0,0,.88);color:#6ce783;font:12px/1.5 -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;white-space:pre-wrap;word-break:break-word;box-shadow:0 4px 18px rgba(0,0,0,.35);pointer-events:none;";
+    document.body.appendChild(panel);
+    return panel;
+  }
+  function resetDebugPanel() {
+    var panel = getDebugPanel();
+    if (panel) panel.textContent = "";
+  }
   function debugLog(stage, data) {
-    if (!isDebugEnabled() || !window.console || typeof window.console.info !== "function") return;
-    window.console.info("[ConsoShare] " + stage, data || {});
+    if (!isDebugEnabled()) return;
+    if (window.console && typeof window.console.info === "function") window.console.info("[ConsoShare] " + stage, data || {});
+    var panel = getDebugPanel();
+    if (!panel) return;
+    var detail = "";
+    if (data && Object.keys(data).length) {
+      try { detail = " " + JSON.stringify(data); }
+      catch (error) { detail = " " + String(data); }
+    }
+    panel.textContent += new Date().toLocaleTimeString() + " " + stage + detail + "\n";
+    panel.scrollTop = panel.scrollHeight;
   }
   function sendBridgeData(eventName, eventData) {
     try {
@@ -239,12 +268,17 @@
   }
   function decodeUploadResponse(bytes) { return { imageUrl: decodeText(firstField(decodeFields(bytes), 1)) }; }
 
-  function requestProtobuf(apiBase, endpoint, body, language, retried) {
+  function requestProtobuf(apiBase, endpoint, body, language, retried, onTiming) {
+    var tokenStartedAt = now();
     return requestToken(false).then(function (token) {
+      var requestStartedAt = now();
       return window.fetch(apiBase + endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/x-protobuf", "Accept": "application/x-protobuf", "product-id": PRODUCT_ID, "x-access-token": token, "conso-language": language },
         body: body
+      }).then(function (response) {
+        if (typeof onTiming === "function") onTiming({ tokenMs: elapsedMs(tokenStartedAt), requestMs: elapsedMs(requestStartedAt), status: response.status });
+        return response;
       });
     }).then(function (response) {
       return response.arrayBuffer().then(function (buffer) {
@@ -255,7 +289,7 @@
           throw error;
         }
         if (decoded.errcode === 107 && !retried) {
-          return requestToken(true).then(function () { return requestProtobuf(apiBase, endpoint, body, language, true); });
+          return requestToken(true).then(function () { return requestProtobuf(apiBase, endpoint, body, language, true, onTiming); });
         }
         if (decoded.errcode !== 0) throw new ShareError("API_" + decoded.errcode, decoded.errmsg || "Share image API request failed.");
         if (!response.ok) throw new ShareError("API_REQUEST_FAILED", "Share image API request failed (HTTP " + response.status + ").");
@@ -308,7 +342,7 @@
         clonedRoot.setAttribute("data-theme", "dark");
         clonedBody.setAttribute("data-theme", "dark");
         clonedBody.classList.add("theme-dark");
-        Array.prototype.forEach.call(clonedDocument.querySelectorAll("[data-conso-share-entry], [data-conso-restricted-modal], .conso-share-floating"), function (node) {
+        Array.prototype.forEach.call(clonedDocument.querySelectorAll("[data-conso-share-entry], [data-conso-restricted-modal], [data-conso-share-debug], .conso-share-floating"), function (node) {
           node.style.setProperty("display", "none", "important");
         });
         captureBackgroundColor = getCaptureBackgroundColor([clonedTarget, clonedBody, clonedRoot], clonedDocument.defaultView);
@@ -318,7 +352,7 @@
         });
       },
       ignoreElements: function (element) {
-        return Boolean(element && element.closest && element.closest("[data-conso-share-entry], [data-conso-restricted-modal], .conso-share-floating"));
+        return Boolean(element && element.closest && element.closest("[data-conso-share-entry], [data-conso-restricted-modal], [data-conso-share-debug], .conso-share-floating"));
       }
     };
     if (captureMode === "full") {
@@ -612,21 +646,33 @@
       });
     });
   }
-  function uploadImage(apiBase, resourceId, language, captured) {
-    return requestProtobuf(apiBase, "/gamefi/share/h5/image/upload-url", encodeUploadRequest(resourceId, language), language, false)
+  function uploadImage(apiBase, resourceId, language, captured, onStage) {
+    return requestProtobuf(apiBase, "/gamefi/share/h5/image/upload-url", encodeUploadRequest(resourceId, language), language, false, function (timing) {
+      if (typeof onStage === "function") {
+        onStage("token.ready", { durationMs: timing.tokenMs });
+        onStage("presign.completed", { durationMs: timing.requestMs, status: timing.status });
+      }
+    })
       .then(function (result) {
         var uploadInfo = decodeUploadUrlResponse(result || new Uint8Array(0));
         if (!uploadInfo.uploadUrl || !uploadInfo.imageUrl) throw new ShareError("UPLOAD_URL_INVALID", "Share image upload URL response is incomplete.");
+        var cosStartedAt = now();
         return window.fetch(uploadInfo.uploadUrl, { method: "PUT", headers: { "Content-Type": "image/png" }, body: captured.blob })
           .then(function (response) {
             if (!response.ok) throw new ShareError("COS_UPLOAD_FAILED", "COS upload failed (HTTP " + response.status + ").");
+            if (typeof onStage === "function") onStage("cos.completed", { durationMs: elapsedMs(cosStartedAt), status: response.status });
             return uploadInfo.imageUrl;
-          }).catch(function () {
+          }).catch(function (error) {
+            if (typeof onStage === "function") onStage("cos.failed", { durationMs: elapsedMs(cosStartedAt), error: error && error.message ? error.message : "COS upload failed" });
+            var fallbackStartedAt = now();
             return captured.blob.arrayBuffer().then(function (buffer) {
-              return requestProtobuf(apiBase, "/gamefi/share/h5/image/upload", encodeUploadRequest(resourceId, language, new Uint8Array(buffer)), language, false);
+              return requestProtobuf(apiBase, "/gamefi/share/h5/image/upload", encodeUploadRequest(resourceId, language, new Uint8Array(buffer)), language, false, function (timing) {
+                if (typeof onStage === "function") onStage("fallback.request", { tokenMs: timing.tokenMs, requestMs: timing.requestMs, status: timing.status });
+              });
             }).then(function (fallbackResult) {
               var fallback = decodeUploadResponse(fallbackResult || new Uint8Array(0));
               if (!fallback.imageUrl) throw new ShareError("UPLOAD_FAILED", "Share image fallback upload returned no image URL.");
+              if (typeof onStage === "function") onStage("fallback.completed", { durationMs: elapsedMs(fallbackStartedAt) });
               return fallback.imageUrl;
             });
           });
@@ -694,21 +740,33 @@
     } catch (error) {
       return Promise.resolve(emitShareResult({ errCode: 1, errMsg: "Invalid H5 share request." }, generationId));
     }
+    resetDebugPanel();
+    var generatedStartedAt = now();
     debugLog("generate.start", { generationId: generationId, requestId: request && request.requestId ? request.requestId : "" });
     var options = {};
     var resourceId = getMeta("conso-share-resource-id");
     if (!resourceId) {
       return Promise.resolve(emitShareResult({ errCode: 2, errMsg: "This page has no share resource ID." }, generationId));
     }
+    var captureStartedAt = now();
     return capturePage(getCaptureMode(options)).then(function (captured) {
-      return composeSharePoster(captured, options);
+      debugLog("capture.completed", { durationMs: elapsedMs(captureStartedAt), width: captured.width, height: captured.height });
+      var posterStartedAt = now();
+      return composeSharePoster(captured, options).then(function (poster) {
+        debugLog("poster.completed", { durationMs: elapsedMs(posterStartedAt), bytes: poster.blob.size });
+        return poster;
+      });
     }).then(function (captured) {
-      return uploadImage(getApiBase(options), resourceId, getLanguage(options), captured).then(function (imageUrl) {
+      return uploadImage(getApiBase(options), resourceId, getLanguage(options), captured, function (stage, data) {
+        debugLog(stage, data);
+      }).then(function (imageUrl) {
+        debugLog("generate.completed", { totalDurationMs: elapsedMs(generatedStartedAt) });
         return { errCode: 0, imageUrl: imageUrl, shareUrl: getShareLink(options), width: captured.width, height: captured.height };
       });
     }).then(function (result) {
       return emitShareResult(result, generationId);
     }).catch(function (error) {
+      debugLog("generate.failed", { totalDurationMs: elapsedMs(generatedStartedAt), error: error && error.message ? error.message : "Unable to generate the share image." });
       return emitShareResult({ errCode: 3, errMsg: error && error.message ? error.message : "Unable to generate the share image." }, generationId);
     });
   }
