@@ -34,9 +34,9 @@
     return String(new URLSearchParams(window.location.search || "").get(name) || "").trim();
   }
   function getApiBase(options) {
-    var value = String((options && options.apiBase) || getParam("apiBase") || getMeta("conso-share-api-base") || "").trim();
+    var value = String((options && options.apiBase) || getMeta("conso-share-api-base") || "").trim();
     if (value) return value.replace(/\/+$/, "");
-    return /test/i.test(window.location.host || "") ? "https://testapinew.conso.network" : "https://api.conso.network";
+    return "https://api.conso.network";
   }
   function getLanguage(options) {
     return String((options && options.language) || getParam("language") || getParam("lang") || document.documentElement.lang || "en").trim() || "en";
