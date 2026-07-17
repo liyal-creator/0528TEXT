@@ -10,6 +10,9 @@
   var root = document.documentElement;
   var params = new URLSearchParams(window.location.search || "");
   var defaultLanguage = runtimeScript ? runtimeScript.getAttribute("data-conso-share-default-language") : "";
+  var TELEGRAM_INVITE_DEEP_LINK = "tg://resolve?domain=invite_miniApp_v2_bot&appname=invite";
+  var TELEGRAM_AUTO_OPEN_DELAY_MS = 1000;
+  var INVITE_CODE_PARAM_NAMES = ["inviteCode", "invite_code", "invitationCode", "invitation_code", "startapp"];
 
   var localizedCopy = {
     en: {
@@ -75,6 +78,43 @@
       || Boolean(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.performAction)
       || Boolean(window.consoAppVersion || window.__consoAppVersion)
       || /Conso-iOS|Conso-Android|Conso-App/i.test(ua);
+  }
+
+  function getInviteCode() {
+    for (var index = 0; index < INVITE_CODE_PARAM_NAMES.length; index += 1) {
+      var inviteCode = String(params.get(INVITE_CODE_PARAM_NAMES[index]) || "").trim();
+      if (inviteCode) return inviteCode;
+    }
+    return "";
+  }
+
+  function getTelegramInviteDeepLink() {
+    var inviteCode = getInviteCode();
+    return inviteCode
+      ? TELEGRAM_INVITE_DEEP_LINK + "&startapp=" + encodeURIComponent(inviteCode)
+      : TELEGRAM_INVITE_DEEP_LINK;
+  }
+
+  function scheduleTelegramInviteOpen() {
+    if (isConsoApp()) return;
+
+    var timer = window.setTimeout(function () {
+      timer = null;
+      // 原生 bridge 可能晚于页面脚本注入，跳转前必须重新判断一次。
+      if (isConsoApp() || document.visibilityState === "hidden") return;
+      window.location.href = getTelegramInviteDeepLink();
+    }, TELEGRAM_AUTO_OPEN_DELAY_MS);
+
+    function cancelAutoOpen() {
+      if (!timer) return;
+      window.clearTimeout(timer);
+      timer = null;
+    }
+
+    window.addEventListener("pagehide", cancelAutoOpen, { once: true });
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "hidden") cancelAutoOpen();
+    }, { once: true });
   }
 
   function syncInitialEnvironment() {
@@ -169,6 +209,7 @@
   }
 
   syncInitialEnvironment();
+  scheduleTelegramInviteOpen();
   window.addEventListener("pageshow", syncInitialEnvironment);
   window.ConsoH5ShareReady = new Promise(function (resolve, reject) {
     function initialize() {
