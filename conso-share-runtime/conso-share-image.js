@@ -271,13 +271,14 @@
   function requestProtobuf(apiBase, endpoint, body, language, retried, onTiming) {
     var tokenStartedAt = now();
     return requestToken(false).then(function (token) {
+      var tokenMs = elapsedMs(tokenStartedAt);
       var requestStartedAt = now();
       return window.fetch(apiBase + endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/x-protobuf", "Accept": "application/x-protobuf", "product-id": PRODUCT_ID, "x-access-token": token, "conso-language": language },
         body: body
       }).then(function (response) {
-        if (typeof onTiming === "function") onTiming({ tokenMs: elapsedMs(tokenStartedAt), requestMs: elapsedMs(requestStartedAt), status: response.status });
+        if (typeof onTiming === "function") onTiming({ tokenMs: tokenMs, requestMs: elapsedMs(requestStartedAt), status: response.status });
         return response;
       });
     }).then(function (response) {
