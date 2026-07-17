@@ -3,6 +3,8 @@
 
   var PRODUCT_ID = "802";
   var TOKEN_TIMEOUT_MS = 8000;
+  var SHARE_IMAGE_MIME_TYPE = "image/jpeg";
+  var SHARE_IMAGE_QUALITY = 0.92;
   var previousTokenInit = window.tokenInit;
   var memoryToken = "";
   var tokenWaiters = [];
@@ -304,18 +306,19 @@
     });
   }
 
-  function canvasToBlob(canvas) {
+  function canvasToBlob(canvas, type, quality) {
+    var mimeType = type || "image/png";
     return new Promise(function (resolve, reject) {
       if (canvas.toBlob) {
-        canvas.toBlob(function (blob) { blob ? resolve(blob) : reject(new ShareError("CAPTURE_FAILED", "Unable to encode the share image as PNG.")); }, "image/png");
+        canvas.toBlob(function (blob) { blob ? resolve(blob) : reject(new ShareError("CAPTURE_FAILED", "Unable to encode the share image.")); }, mimeType, quality);
         return;
       }
       try {
-        var binary = window.atob(canvas.toDataURL("image/png").split(",")[1]);
+        var binary = window.atob(canvas.toDataURL(mimeType, quality).split(",")[1]);
         var bytes = new Uint8Array(binary.length);
         for (var index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
-        resolve(new Blob([bytes], { type: "image/png" }));
-      } catch (error) { reject(new ShareError("CAPTURE_FAILED", "Unable to encode the share image as PNG.")); }
+        resolve(new Blob([bytes], { type: mimeType }));
+      } catch (error) { reject(new ShareError("CAPTURE_FAILED", "Unable to encode the share image.")); }
     });
   }
   function capturePage(captureMode) {
@@ -647,7 +650,7 @@
       drawCapturedContent(context, captured, pagePadding, contentY, contentWidth, contentHeight);
       drawBlurAndDarkenOverlay(context, canvas, pagePadding, blurTopY, contentWidth, blurHeight, captured.pageBackgroundColor);
       drawBottomSheet(context, options, logo, copy, captured.pageBackgroundColor, dividerY, posterHeight, blurHeight);
-      return canvasToBlob(canvas).then(function (blob) {
+      return canvasToBlob(canvas, SHARE_IMAGE_MIME_TYPE, SHARE_IMAGE_QUALITY).then(function (blob) {
         return { blob: blob, canvas: canvas, width: posterWidth, height: posterHeight };
       });
     });
@@ -721,7 +724,7 @@
     return prepareUploadTarget(apiBase, resourceId, language, onStage)
       .then(function (uploadInfo) {
         var cosStartedAt = now();
-        return window.fetch(uploadInfo.uploadUrl, { method: "PUT", headers: { "Content-Type": "image/png" }, body: captured.blob })
+        return window.fetch(uploadInfo.uploadUrl, { method: "PUT", headers: { "Content-Type": captured.blob.type || SHARE_IMAGE_MIME_TYPE }, body: captured.blob })
           .then(function (response) {
             if (!response.ok) throw new ShareError("COS_UPLOAD_FAILED", "COS upload failed (HTTP " + response.status + ").");
             emitStage(onStage, "cos.completed", { durationMs: elapsedMs(cosStartedAt), status: response.status });
