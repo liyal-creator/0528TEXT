@@ -10,7 +10,6 @@
   var root = document.documentElement;
   var params = new URLSearchParams(window.location.search || "");
   var defaultLanguage = runtimeScript ? runtimeScript.getAttribute("data-conso-share-default-language") : "";
-  var TELEGRAM_INVITE_DEEP_LINK = "tg://resolve?domain=invite_miniApp_v2_bot&appname=invite";
   var TELEGRAM_AUTO_OPEN_DELAY_MS = 1000;
   var INVITE_CODE_PARAM_NAMES = ["inviteCode", "invite_code", "invitationCode", "invitation_code", "startapp"];
 
@@ -88,21 +87,32 @@
     return "";
   }
 
+  function getTelegramMiniAppDomain() {
+    var meta = document.querySelector('meta[name="conso-share-telegram-miniapp-domain"]');
+    var domain = String(meta && meta.content || "").trim();
+    return /^[A-Za-z0-9_]{5,64}$/.test(domain) ? domain : "";
+  }
+
   function getTelegramInviteDeepLink() {
+    var domain = getTelegramMiniAppDomain();
+    if (!domain) return "";
+
+    var deepLink = "tg://resolve?domain=" + encodeURIComponent(domain) + "&appname=invite";
     var inviteCode = getInviteCode();
     return inviteCode
-      ? TELEGRAM_INVITE_DEEP_LINK + "&startapp=" + encodeURIComponent(inviteCode)
-      : TELEGRAM_INVITE_DEEP_LINK;
+      ? deepLink + "&startapp=" + encodeURIComponent(inviteCode)
+      : deepLink;
   }
 
   function scheduleTelegramInviteOpen() {
-    if (isConsoApp()) return;
+    if (isConsoApp() || !getTelegramMiniAppDomain()) return;
 
     var timer = window.setTimeout(function () {
       timer = null;
       // 原生 bridge 可能晚于页面脚本注入，跳转前必须重新判断一次。
       if (isConsoApp() || document.visibilityState === "hidden") return;
-      window.location.href = getTelegramInviteDeepLink();
+      var deepLink = getTelegramInviteDeepLink();
+      if (deepLink) window.location.href = deepLink;
     }, TELEGRAM_AUTO_OPEN_DELAY_MS);
 
     function cancelAutoOpen() {
