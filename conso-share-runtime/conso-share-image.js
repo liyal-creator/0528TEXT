@@ -787,10 +787,12 @@
       return { ok: true, width: captured.width, height: captured.height };
     });
   }
-  function emitShareResult(result, generationId) {
+  function emitShareResult(result, generationId, requestId) {
+    result.requestId = requestId || "";
     var sent = sendBridgeProtobuf("shareImageResult", "H5ShareGenerateResponse", result);
     debugLog("generate.result", {
       generationId: generationId,
+      requestId: result.requestId,
       errCode: result && result.errCode,
       sent: sent,
       hasImageUrl: Boolean(result && result.imageUrl)
@@ -802,15 +804,16 @@
     try {
       request = decodeBridgeMessage("H5ShareGenerateRequest", payload);
     } catch (error) {
-      return Promise.resolve(emitShareResult({ errCode: 1, errMsg: "Invalid H5 share request." }, generationId));
+      return Promise.resolve(emitShareResult({ errCode: 1, errMsg: "Invalid H5 share request." }, generationId, ""));
     }
+    var requestId = request && request.requestId ? request.requestId : "";
     resetDebugPanel();
     var generatedStartedAt = now();
-    debugLog("generate.start", { generationId: generationId, requestId: request && request.requestId ? request.requestId : "" });
+    debugLog("generate.start", { generationId: generationId, requestId: requestId });
     var options = {};
     var resourceId = getMeta("conso-share-resource-id");
     if (!resourceId) {
-      return Promise.resolve(emitShareResult({ errCode: 2, errMsg: "This page has no share resource ID." }, generationId));
+      return Promise.resolve(emitShareResult({ errCode: 2, errMsg: "This page has no share resource ID." }, generationId, requestId));
     }
     return prepareShareImage(options, function (stage, data) {
       debugLog(stage, data);
@@ -822,10 +825,10 @@
         return { errCode: 0, imageUrl: imageUrl, shareUrl: getShareLink(options), width: captured.width, height: captured.height };
       });
     }).then(function (result) {
-      return emitShareResult(result, generationId);
+      return emitShareResult(result, generationId, requestId);
     }).catch(function (error) {
       debugLog("generate.failed", { totalDurationMs: elapsedMs(generatedStartedAt), error: error && error.message ? error.message : "Unable to generate the share image." });
-      return emitShareResult({ errCode: 3, errMsg: error && error.message ? error.message : "Unable to generate the share image." }, generationId);
+      return emitShareResult({ errCode: 3, errMsg: error && error.message ? error.message : "Unable to generate the share image." }, generationId, requestId);
     });
   }
 

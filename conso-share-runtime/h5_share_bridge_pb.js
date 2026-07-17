@@ -4,28 +4,28 @@
 
     // Common aliases
     var $Reader = $protobuf.Reader, $Writer = $protobuf.Writer, $util = $protobuf.util;
-    
+
     // Exported root namespace
     var $root = $protobuf.roots["default"] || ($protobuf.roots["default"] = {});
-    
+
     $root.pb = (function() {
-    
+
         /**
          * Namespace pb.
          * @exports pb
          * @namespace
          */
         var pb = {};
-    
+
         pb.H5ShareButtonVisibility = (function() {
-    
+
             /**
              * Properties of a H5ShareButtonVisibility.
              * @memberof pb
              * @interface IH5ShareButtonVisibility
              * @property {boolean|null} [showShareButton] H5ShareButtonVisibility showShareButton
              */
-    
+
             /**
              * Constructs a new H5ShareButtonVisibility.
              * @memberof pb
@@ -40,7 +40,7 @@
                         if (properties[keys[i]] != null)
                             this[keys[i]] = properties[keys[i]];
             }
-    
+
             /**
              * H5ShareButtonVisibility showShareButton.
              * @member {boolean} showShareButton
@@ -48,7 +48,7 @@
              * @instance
              */
             H5ShareButtonVisibility.prototype.showShareButton = false;
-    
+
             /**
              * Creates a new H5ShareButtonVisibility instance using the specified properties.
              * @function create
@@ -60,7 +60,7 @@
             H5ShareButtonVisibility.create = function create(properties) {
                 return new H5ShareButtonVisibility(properties);
             };
-    
+
             /**
              * Encodes the specified H5ShareButtonVisibility message. Does not implicitly {@link pb.H5ShareButtonVisibility.verify|verify} messages.
              * @function encode
@@ -77,7 +77,7 @@
                     writer.uint32(/* id 1, wireType 0 =*/8).bool(message.showShareButton);
                 return writer;
             };
-    
+
             /**
              * Encodes the specified H5ShareButtonVisibility message, length delimited. Does not implicitly {@link pb.H5ShareButtonVisibility.verify|verify} messages.
              * @function encodeDelimited
@@ -90,7 +90,7 @@
             H5ShareButtonVisibility.encodeDelimited = function encodeDelimited(message, writer) {
                 return this.encode(message, writer).ldelim();
             };
-    
+
             /**
              * Decodes a H5ShareButtonVisibility message from the specified reader or buffer.
              * @function decode
@@ -120,7 +120,7 @@
                 }
                 return message;
             };
-    
+
             /**
              * Decodes a H5ShareButtonVisibility message from the specified reader or buffer, length delimited.
              * @function decodeDelimited
@@ -136,7 +136,7 @@
                     reader = new $Reader(reader);
                 return this.decode(reader, reader.uint32());
             };
-    
+
             /**
              * Verifies a H5ShareButtonVisibility message.
              * @function verify
@@ -153,7 +153,7 @@
                         return "showShareButton: boolean expected";
                 return null;
             };
-    
+
             /**
              * Creates a H5ShareButtonVisibility message from a plain object. Also converts values to their respective internal types.
              * @function fromObject
@@ -170,7 +170,7 @@
                     message.showShareButton = Boolean(object.showShareButton);
                 return message;
             };
-    
+
             /**
              * Creates a plain object from a H5ShareButtonVisibility message. Also converts values to other types if specified.
              * @function toObject
@@ -190,7 +190,7 @@
                     object.showShareButton = message.showShareButton;
                 return object;
             };
-    
+
             /**
              * Converts this H5ShareButtonVisibility to JSON.
              * @function toJSON
@@ -201,7 +201,7 @@
             H5ShareButtonVisibility.prototype.toJSON = function toJSON() {
                 return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
             };
-    
+
             /**
              * Gets the default type url for H5ShareButtonVisibility
              * @function getTypeUrl
@@ -216,19 +216,19 @@
                 }
                 return typeUrlPrefix + "/pb.H5ShareButtonVisibility";
             };
-    
+
             return H5ShareButtonVisibility;
         })();
-    
+
         pb.H5ShareGenerateRequest = (function() {
-    
+
             /**
              * Properties of a H5ShareGenerateRequest.
              * @memberof pb
              * @interface IH5ShareGenerateRequest
              * @property {string|null} [requestId] H5ShareGenerateRequest requestId
              */
-    
+
             /**
              * Constructs a new H5ShareGenerateRequest.
              * @memberof pb
@@ -243,7 +243,7 @@
                         if (properties[keys[i]] != null)
                             this[keys[i]] = properties[keys[i]];
             }
-    
+
             /**
              * H5ShareGenerateRequest requestId.
              * @member {string} requestId
@@ -251,7 +251,7 @@
              * @instance
              */
             H5ShareGenerateRequest.prototype.requestId = "";
-    
+
             /**
              * Creates a new H5ShareGenerateRequest instance using the specified properties.
              * @function create
@@ -263,7 +263,7 @@
             H5ShareGenerateRequest.create = function create(properties) {
                 return new H5ShareGenerateRequest(properties);
             };
-    
+
             /**
              * Encodes the specified H5ShareGenerateRequest message. Does not implicitly {@link pb.H5ShareGenerateRequest.verify|verify} messages.
              * @function encode
@@ -280,7 +280,7 @@
                     writer.uint32(/* id 1, wireType 2 =*/10).string(message.requestId);
                 return writer;
             };
-    
+
             /**
              * Encodes the specified H5ShareGenerateRequest message, length delimited. Does not implicitly {@link pb.H5ShareGenerateRequest.verify|verify} messages.
              * @function encodeDelimited
@@ -293,7 +293,7 @@
             H5ShareGenerateRequest.encodeDelimited = function encodeDelimited(message, writer) {
                 return this.encode(message, writer).ldelim();
             };
-    
+
             /**
              * Decodes a H5ShareGenerateRequest message from the specified reader or buffer.
              * @function decode
@@ -323,7 +323,7 @@
                 }
                 return message;
             };
-    
+
             /**
              * Decodes a H5ShareGenerateRequest message from the specified reader or buffer, length delimited.
              * @function decodeDelimited
@@ -339,7 +339,7 @@
                     reader = new $Reader(reader);
                 return this.decode(reader, reader.uint32());
             };
-    
+
             /**
              * Verifies a H5ShareGenerateRequest message.
              * @function verify
@@ -356,7 +356,7 @@
                         return "requestId: string expected";
                 return null;
             };
-    
+
             /**
              * Creates a H5ShareGenerateRequest message from a plain object. Also converts values to their respective internal types.
              * @function fromObject
@@ -373,7 +373,7 @@
                     message.requestId = String(object.requestId);
                 return message;
             };
-    
+
             /**
              * Creates a plain object from a H5ShareGenerateRequest message. Also converts values to other types if specified.
              * @function toObject
@@ -393,7 +393,7 @@
                     object.requestId = message.requestId;
                 return object;
             };
-    
+
             /**
              * Converts this H5ShareGenerateRequest to JSON.
              * @function toJSON
@@ -404,7 +404,7 @@
             H5ShareGenerateRequest.prototype.toJSON = function toJSON() {
                 return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
             };
-    
+
             /**
              * Gets the default type url for H5ShareGenerateRequest
              * @function getTypeUrl
@@ -419,12 +419,12 @@
                 }
                 return typeUrlPrefix + "/pb.H5ShareGenerateRequest";
             };
-    
+
             return H5ShareGenerateRequest;
         })();
-    
+
         pb.H5ShareGenerateResponse = (function() {
-    
+
             /**
              * Properties of a H5ShareGenerateResponse.
              * @memberof pb
@@ -435,8 +435,9 @@
              * @property {number|null} [width] H5ShareGenerateResponse width
              * @property {number|null} [height] H5ShareGenerateResponse height
              * @property {string|null} [errMsg] H5ShareGenerateResponse errMsg
+             * @property {string|null} [requestId] H5ShareGenerateResponse requestId
              */
-    
+
             /**
              * Constructs a new H5ShareGenerateResponse.
              * @memberof pb
@@ -451,7 +452,7 @@
                         if (properties[keys[i]] != null)
                             this[keys[i]] = properties[keys[i]];
             }
-    
+
             /**
              * H5ShareGenerateResponse errCode.
              * @member {number} errCode
@@ -459,7 +460,7 @@
              * @instance
              */
             H5ShareGenerateResponse.prototype.errCode = 0;
-    
+
             /**
              * H5ShareGenerateResponse imageUrl.
              * @member {string} imageUrl
@@ -467,7 +468,7 @@
              * @instance
              */
             H5ShareGenerateResponse.prototype.imageUrl = "";
-    
+
             /**
              * H5ShareGenerateResponse shareUrl.
              * @member {string} shareUrl
@@ -475,7 +476,7 @@
              * @instance
              */
             H5ShareGenerateResponse.prototype.shareUrl = "";
-    
+
             /**
              * H5ShareGenerateResponse width.
              * @member {number} width
@@ -483,7 +484,7 @@
              * @instance
              */
             H5ShareGenerateResponse.prototype.width = 0;
-    
+
             /**
              * H5ShareGenerateResponse height.
              * @member {number} height
@@ -491,7 +492,7 @@
              * @instance
              */
             H5ShareGenerateResponse.prototype.height = 0;
-    
+
             /**
              * H5ShareGenerateResponse errMsg.
              * @member {string} errMsg
@@ -499,7 +500,15 @@
              * @instance
              */
             H5ShareGenerateResponse.prototype.errMsg = "";
-    
+
+            /**
+             * H5ShareGenerateResponse requestId.
+             * @member {string} requestId
+             * @memberof pb.H5ShareGenerateResponse
+             * @instance
+             */
+            H5ShareGenerateResponse.prototype.requestId = "";
+
             /**
              * Creates a new H5ShareGenerateResponse instance using the specified properties.
              * @function create
@@ -511,7 +520,7 @@
             H5ShareGenerateResponse.create = function create(properties) {
                 return new H5ShareGenerateResponse(properties);
             };
-    
+
             /**
              * Encodes the specified H5ShareGenerateResponse message. Does not implicitly {@link pb.H5ShareGenerateResponse.verify|verify} messages.
              * @function encode
@@ -536,9 +545,11 @@
                     writer.uint32(/* id 5, wireType 0 =*/40).uint32(message.height);
                 if (message.errMsg != null && Object.hasOwnProperty.call(message, "errMsg"))
                     writer.uint32(/* id 6, wireType 2 =*/50).string(message.errMsg);
+                if (message.requestId != null && Object.hasOwnProperty.call(message, "requestId"))
+                    writer.uint32(/* id 7, wireType 2 =*/58).string(message.requestId);
                 return writer;
             };
-    
+
             /**
              * Encodes the specified H5ShareGenerateResponse message, length delimited. Does not implicitly {@link pb.H5ShareGenerateResponse.verify|verify} messages.
              * @function encodeDelimited
@@ -551,7 +562,7 @@
             H5ShareGenerateResponse.encodeDelimited = function encodeDelimited(message, writer) {
                 return this.encode(message, writer).ldelim();
             };
-    
+
             /**
              * Decodes a H5ShareGenerateResponse message from the specified reader or buffer.
              * @function decode
@@ -594,6 +605,10 @@
                             message.errMsg = reader.string();
                             break;
                         }
+                    case 7: {
+                            message.requestId = reader.string();
+                            break;
+                        }
                     default:
                         reader.skipType(tag & 7);
                         break;
@@ -601,7 +616,7 @@
                 }
                 return message;
             };
-    
+
             /**
              * Decodes a H5ShareGenerateResponse message from the specified reader or buffer, length delimited.
              * @function decodeDelimited
@@ -617,7 +632,7 @@
                     reader = new $Reader(reader);
                 return this.decode(reader, reader.uint32());
             };
-    
+
             /**
              * Verifies a H5ShareGenerateResponse message.
              * @function verify
@@ -647,9 +662,12 @@
                 if (message.errMsg != null && message.hasOwnProperty("errMsg"))
                     if (!$util.isString(message.errMsg))
                         return "errMsg: string expected";
+                if (message.requestId != null && message.hasOwnProperty("requestId"))
+                    if (!$util.isString(message.requestId))
+                        return "requestId: string expected";
                 return null;
             };
-    
+
             /**
              * Creates a H5ShareGenerateResponse message from a plain object. Also converts values to their respective internal types.
              * @function fromObject
@@ -674,9 +692,11 @@
                     message.height = object.height >>> 0;
                 if (object.errMsg != null)
                     message.errMsg = String(object.errMsg);
+                if (object.requestId != null)
+                    message.requestId = String(object.requestId);
                 return message;
             };
-    
+
             /**
              * Creates a plain object from a H5ShareGenerateResponse message. Also converts values to other types if specified.
              * @function toObject
@@ -697,6 +717,7 @@
                     object.width = 0;
                     object.height = 0;
                     object.errMsg = "";
+                    object.requestId = "";
                 }
                 if (message.errCode != null && message.hasOwnProperty("errCode"))
                     object.errCode = message.errCode;
@@ -710,9 +731,11 @@
                     object.height = message.height;
                 if (message.errMsg != null && message.hasOwnProperty("errMsg"))
                     object.errMsg = message.errMsg;
+                if (message.requestId != null && message.hasOwnProperty("requestId"))
+                    object.requestId = message.requestId;
                 return object;
             };
-    
+
             /**
              * Converts this H5ShareGenerateResponse to JSON.
              * @function toJSON
@@ -723,7 +746,7 @@
             H5ShareGenerateResponse.prototype.toJSON = function toJSON() {
                 return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
             };
-    
+
             /**
              * Gets the default type url for H5ShareGenerateResponse
              * @function getTypeUrl
@@ -738,10 +761,10 @@
                 }
                 return typeUrlPrefix + "/pb.H5ShareGenerateResponse";
             };
-    
+
             return H5ShareGenerateResponse;
         })();
-    
+
         return pb;
     })();
 
