@@ -856,9 +856,24 @@
     }
   }
 
+  function warmUpUploadTarget() {
+    var resourceId = getMeta("conso-share-resource-id");
+    if (!resourceId) return;
+    var options = {};
+    debugLog("preload.presign.start", {});
+    prepareUploadTarget(getApiBase(options), resourceId, getLanguage(options), function (stage, data) {
+      debugLog("preload." + stage, data);
+    }).then(function (target) {
+      debugLog("preload.presign.ready", { expiresInMs: Math.max(0, target.expiresAt - Date.now()) });
+    }).catch(function (error) {
+      debugLog("preload.presign.failed", { error: error && error.message ? error.message : "Unable to prepare the upload URL." });
+    });
+  }
+
   window.shareButtonVisibility = function () {
-    // 分享按钮初始化时预取 token，避免用户点击分享后再等待原生桥接返回。
+    // 初始化分享按钮时并行预取 token、预签名地址和分享图，避免点击后串行等待。
     warmUpToken();
+    warmUpUploadTarget();
     warmUpShareResources();
     var result = getShareButtonVisibilityPayload();
     debugLog("visibility.result", { showShareButton: Boolean(getMeta("conso-share-resource-id")) });
