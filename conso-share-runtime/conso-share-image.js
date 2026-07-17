@@ -718,29 +718,33 @@
     });
   }
   function uploadImage(apiBase, resourceId, language, captured, onStage) {
-    return prepareUploadTarget(apiBase, resourceId, language, onStage)
-      .then(function (uploadInfo) {
+    // 主链路由业务服务上传 COS，减少移动端 WebView 直传 COS 的网络差异和 CORS 预检。
+    // 服务端上传不可用时，才回退至预签名直传，避免分享能力整体不可用。
+    var serverStartedAt = now();
+    return captured.blob.arrayBuffer().then(function (buffer) {
+      return requestProtobuf(apiBase, "/gamefi/share/h5/image/upload", encodeUploadRequest(resourceId, language, new Uint8Array(buffer)), language, false, function (timing) {
+        emitStage(onStage, "server.upload.request", { tokenMs: timing.tokenMs, requestMs: timing.requestMs, status: timing.status });
+      });
+    }).then(function (serverResult) {
+      var uploaded = decodeUploadResponse(serverResult || new Uint8Array(0));
+      if (!uploaded.imageUrl) throw new ShareError("UPLOAD_FAILED", "Share image upload returned no image URL.");
+      emitStage(onStage, "server.upload.completed", { durationMs: elapsedMs(serverStartedAt) });
+      return uploaded.imageUrl;
+    }).catch(function (serverError) {
+      emitStage(onStage, "server.upload.failed", {
+        durationMs: elapsedMs(serverStartedAt),
+        error: serverError && serverError.message ? serverError.message : "Server upload failed"
+      });
+      return prepareUploadTarget(apiBase, resourceId, language, onStage).then(function (uploadInfo) {
         var cosStartedAt = now();
         return window.fetch(uploadInfo.uploadUrl, { method: "PUT", headers: { "Content-Type": "image/png" }, body: captured.blob })
           .then(function (response) {
             if (!response.ok) throw new ShareError("COS_UPLOAD_FAILED", "COS upload failed (HTTP " + response.status + ").");
             emitStage(onStage, "cos.completed", { durationMs: elapsedMs(cosStartedAt), status: response.status });
             return uploadInfo.imageUrl;
-          }).catch(function (error) {
-            emitStage(onStage, "cos.failed", { durationMs: elapsedMs(cosStartedAt), error: error && error.message ? error.message : "COS upload failed" });
-            var fallbackStartedAt = now();
-            return captured.blob.arrayBuffer().then(function (buffer) {
-              return requestProtobuf(apiBase, "/gamefi/share/h5/image/upload", encodeUploadRequest(resourceId, language, new Uint8Array(buffer)), language, false, function (timing) {
-                emitStage(onStage, "fallback.request", { tokenMs: timing.tokenMs, requestMs: timing.requestMs, status: timing.status });
-              });
-            }).then(function (fallbackResult) {
-              var fallback = decodeUploadResponse(fallbackResult || new Uint8Array(0));
-              if (!fallback.imageUrl) throw new ShareError("UPLOAD_FAILED", "Share image fallback upload returned no image URL.");
-              emitStage(onStage, "fallback.completed", { durationMs: elapsedMs(fallbackStartedAt) });
-              return fallback.imageUrl;
-            });
           });
       });
+    });
   }
   function closePreview() {
     var preview = document.querySelector("[data-conso-share-preview]");
@@ -834,9 +838,6 @@
     sharePreloadStarted = true;
     var preload = function () {
       var options = {};
-      var resourceId = getMeta("conso-share-resource-id");
-      var apiBase = getApiBase(options);
-      var language = getLanguage(options);
       debugLog("preload.start", {});
       prepareShareImage(options, function (stage, data) {
         debugLog("preload." + stage, data);
@@ -844,13 +845,6 @@
         debugLog("preload.poster.ready", {});
       }).catch(function (error) {
         debugLog("preload.poster.failed", { error: error && error.message ? error.message : "Unable to prepare the share image." });
-      });
-      prepareUploadTarget(apiBase, resourceId, language, function (stage, data) {
-        debugLog("preload." + stage, data);
-      }).then(function () {
-        debugLog("preload.presign.ready", {});
-      }).catch(function (error) {
-        debugLog("preload.presign.failed", { error: error && error.message ? error.message : "Unable to prepare the upload URL." });
       });
     };
     if (document.readyState === "complete") {
