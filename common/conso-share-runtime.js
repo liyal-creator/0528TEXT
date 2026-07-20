@@ -73,10 +73,49 @@
     return isEnabledParam("inConso")
       || isEnabledParam("consoApp")
       || isEnabledParam("isConso")
+      || Boolean(window.__consoClientTokenReceived)
       || Boolean(window.conso_android)
-      || Boolean(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.performAction)
       || Boolean(window.consoAppVersion || window.__consoAppVersion)
       || /Conso-iOS|Conso-Android|Conso-App/i.test(ua);
+  }
+
+  var previousTokenInit = window.tokenInit;
+  window.tokenInit = function (token) {
+    var normalized = String(token || "").trim();
+    if (normalized) {
+      var environmentChanged = !window.__consoClientTokenReceived;
+      window.__consoClientTokenReceived = true;
+      window.__consoClientToken = normalized;
+      if (environmentChanged) {
+        window.dispatchEvent(new CustomEvent("conso-client-token-received"));
+      }
+    }
+    if (typeof previousTokenInit === "function") return previousTokenInit.apply(this, arguments);
+    return undefined;
+  };
+
+  function requestClientTokenForEnvironment() {
+    if (window.__consoClientTokenRequestSent) return;
+    try {
+      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.performAction) {
+        window.__consoClientTokenRequestSent = true;
+        window.webkit.messageHandlers.performAction.postMessage({
+          eventName: "getClientWebToken",
+          eventData: JSON.stringify({})
+        });
+        return;
+      }
+      if (window.conso_android && typeof window.conso_android.post === "function") {
+        window.__consoClientTokenRequestSent = true;
+        window.conso_android.post(JSON.stringify({
+          eventName: "getClientWebToken",
+          eventData: JSON.stringify({})
+        }));
+      }
+    } catch (error) {
+      window.__consoClientTokenRequestSent = false;
+      // Telegram 或旧版 WebView 不支持该事件时保持站外展示。
+    }
   }
 
   function getInviteCode() {
@@ -221,6 +260,8 @@
   syncInitialEnvironment();
   scheduleTelegramInviteOpen();
   window.addEventListener("pageshow", syncInitialEnvironment);
+  window.addEventListener("conso-client-token-received", syncInitialEnvironment);
+  requestClientTokenForEnvironment();
   window.ConsoH5ShareReady = new Promise(function (resolve, reject) {
     function initialize() {
       start().then(resolve, reject);

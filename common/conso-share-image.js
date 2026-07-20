@@ -6,7 +6,7 @@
   var SHARE_IMAGE_MIME_TYPE = "image/jpeg";
   var SHARE_IMAGE_QUALITY = 0.92;
   var previousTokenInit = window.tokenInit;
-  var memoryToken = "";
+  var memoryToken = String(window.__consoClientToken || "").trim();
   var tokenWaiters = [];
   var tokenWarmUpStarted = false;
   var shareGenerationInFlight = false;
@@ -126,17 +126,26 @@
   window.tokenInit = function (token) {
     var normalized = String(token || "").trim();
     if (normalized) {
+      var environmentChanged = !window.__consoClientTokenReceived;
+      window.__consoClientTokenReceived = true;
+      window.__consoClientToken = normalized;
       memoryToken = normalized;
       var waiterCount = tokenWaiters.length;
       settleTokenWaiters(normalized);
       debugLog("token.received", { waiterCount: waiterCount });
+      if (environmentChanged) {
+        window.dispatchEvent(new CustomEvent("conso-client-token-received"));
+      }
     }
     if (typeof previousTokenInit === "function") return previousTokenInit.apply(this, arguments);
     return undefined;
   };
   function requestToken(forceRefresh) {
     if (!forceRefresh && memoryToken) return Promise.resolve(memoryToken);
-    if (forceRefresh) memoryToken = "";
+    if (forceRefresh) {
+      memoryToken = "";
+      window.__consoClientTokenRequestSent = false;
+    }
     return new Promise(function (resolve, reject) {
       var shouldRequestToken = tokenWaiters.length === 0;
       var waiter = { resolve: resolve, reject: reject };
@@ -146,7 +155,9 @@
         reject(new ShareError("TOKEN_TIMEOUT", "Timed out waiting for the Conso client token."));
       }, TOKEN_TIMEOUT_MS);
       tokenWaiters.push(waiter);
-      if (shouldRequestToken) sendBridge("getClientWebToken", {});
+      if (shouldRequestToken && !window.__consoClientTokenRequestSent) {
+        window.__consoClientTokenRequestSent = sendBridge("getClientWebToken", {});
+      }
     });
   }
   function warmUpToken() {
@@ -957,4 +968,5 @@
   if (getParam("shareImagePreview") === "1") {
     window.setTimeout(function () { preview().catch(showPreviewError); }, 0);
   }
+  warmUpToken();
 })();

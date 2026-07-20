@@ -25,10 +25,10 @@
 
     var ua = window.navigator.userAgent || "";
 
-    // 1. JS Bridge 注入检测（最可靠：App webview 启动时主动注入）
+    // 1. Conso Android 专属 bridge；通用 iOS performAction 不能用于区分 Telegram。
     var w = window;
+    if (w.__consoClientTokenReceived) return true;
     if (w.conso_android) return true;
-    if (w.webkit && w.webkit.messageHandlers && w.webkit.messageHandlers.performAction) return true;
 
     // 2. Conso 专属版本号注入变量。不能使用通用 appVersion，其他 WebView 也可能提供该变量。
     if (w.consoAppVersion || w.__consoAppVersion) return true;
@@ -187,4 +187,5 @@
   });
 
   syncState();
+  window.addEventListener("conso-client-token-received", syncState);
 })();
