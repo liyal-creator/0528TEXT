@@ -68,15 +68,55 @@
     return value === "1" || value === "true" || value === "yes";
   }
 
-  function isConsoApp() {
+  function getConsoEnvironmentSignals() {
     var ua = window.navigator.userAgent || "";
-    return isEnabledParam("inConso")
-      || isEnabledParam("consoApp")
-      || isEnabledParam("isConso")
-      || Boolean(window.__consoClientTokenReceived)
-      || Boolean(window.conso_android)
-      || Boolean(window.consoAppVersion || window.__consoAppVersion)
-      || /Conso-iOS|Conso-Android|Conso-App/i.test(ua);
+    var urlFlags = ["inConso", "consoApp", "isConso"].filter(isEnabledParam);
+    var reasons = urlFlags.map(function (name) { return "url:" + name; });
+    if (window.__consoClientTokenReceived) reasons.push("tokenInit");
+    if (window.conso_android) reasons.push("conso_android");
+    if (window.consoAppVersion) reasons.push("consoAppVersion");
+    if (window.__consoAppVersion) reasons.push("__consoAppVersion");
+    if (/Conso-iOS|Conso-Android|Conso-App/i.test(ua)) reasons.push("userAgent");
+
+    return {
+      inConso: reasons.length > 0,
+      reasons: reasons,
+      tokenInitReceived: Boolean(window.__consoClientTokenReceived),
+      consoAndroid: Boolean(window.conso_android),
+      iosPerformAction: Boolean(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.performAction),
+      consoAppVersion: String(window.consoAppVersion || ""),
+      internalConsoAppVersion: String(window.__consoAppVersion || ""),
+      urlFlags: urlFlags,
+      userAgent: ua
+    };
+  }
+
+  function isEnvironmentDebugEnabled() {
+    return isEnabledParam("consoEnvDebug");
+  }
+
+  function getEnvironmentDebugPanel() {
+    if (!isEnvironmentDebugEnabled()) return null;
+    var panel = document.querySelector("[data-conso-environment-debug]");
+    if (panel) return panel;
+    if (!document.body) return null;
+    panel = document.createElement("pre");
+    panel.setAttribute("data-conso-environment-debug", "");
+    panel.style.cssText = "position:fixed;z-index:2147483647;left:8px;right:8px;top:8px;max-height:44vh;overflow:auto;box-sizing:border-box;margin:0;padding:10px;border:1px solid rgba(108,231,131,.55);border-radius:8px;background:rgba(0,0,0,.9);color:#6ce783;font:11px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:pre-wrap;word-break:break-all;pointer-events:auto;";
+    document.body.appendChild(panel);
+    return panel;
+  }
+
+  function logConsoEnvironment(stage) {
+    var panel = getEnvironmentDebugPanel();
+    if (!panel) return;
+    var detail = getConsoEnvironmentSignals();
+    panel.textContent += new Date().toLocaleTimeString() + " " + stage + "\n" + JSON.stringify(detail, null, 2) + "\n";
+    panel.scrollTop = panel.scrollHeight;
+  }
+
+  function isConsoApp() {
+    return getConsoEnvironmentSignals().inConso;
   }
 
   var previousTokenInit = window.tokenInit;
@@ -86,6 +126,7 @@
       var environmentChanged = !window.__consoClientTokenReceived;
       window.__consoClientTokenReceived = true;
       window.__consoClientToken = normalized;
+      logConsoEnvironment("tokenInit.received");
       if (environmentChanged) {
         window.dispatchEvent(new CustomEvent("conso-client-token-received"));
       }
@@ -103,6 +144,7 @@
           eventName: "getClientWebToken",
           eventData: JSON.stringify({})
         });
+        logConsoEnvironment("token.requested.ios");
         return;
       }
       if (window.conso_android && typeof window.conso_android.post === "function") {
@@ -111,6 +153,7 @@
           eventName: "getClientWebToken",
           eventData: JSON.stringify({})
         }));
+        logConsoEnvironment("token.requested.android");
       }
     } catch (error) {
       window.__consoClientTokenRequestSent = false;
@@ -170,6 +213,7 @@
     var theme = String(params.get("theme") || "").toLowerCase();
     root.classList.toggle("conso-share-in-app", isConsoApp());
     root.classList.toggle("conso-share-dark", theme === "dark" || params.get("isDark") === "1");
+    logConsoEnvironment("environment.synced");
   }
 
   function appendStylesheet() {
