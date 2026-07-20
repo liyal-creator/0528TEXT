@@ -245,11 +245,15 @@
     syncInitialEnvironment();
     appendStylesheet();
     mountShell();
-    return loadScript("html2canvas.min.js")
-      .then(function () { return loadScript("conso-share-widget.js"); })
-      .then(function () { return loadScript("qrcode.js"); })
-      .then(function () { return loadScript("protobuf.min.js"); })
-      .then(function () { return loadScript("h5_share_bridge_pb.js"); })
+    var protobufReady = loadScript("protobuf.min.js")
+      .then(function () { return loadScript("h5_share_bridge_pb.js"); });
+
+    return Promise.all([
+      loadScript("html2canvas.min.js"),
+      loadScript("conso-share-widget.js"),
+      loadScript("qrcode.js"),
+      protobufReady
+    ])
       .then(function () { return loadScript("conso-share-image.js"); })
       .catch(function (error) {
         console.error("[ConsoShareRuntime]", error);
