@@ -413,6 +413,15 @@
       var image = new Image();
       image.onload = function () { resolve(image); };
       image.onerror = function () { resolve(null); };
+      try {
+        var imageUrl = new URL(url, window.location.href);
+        if ((imageUrl.protocol === "http:" || imageUrl.protocol === "https:")
+          && imageUrl.origin !== window.location.origin) {
+          image.crossOrigin = "anonymous";
+        }
+      } catch (error) {
+        // Invalid optional assets fall back to the code-rendered brand treatment.
+      }
       image.src = url;
     });
   }
