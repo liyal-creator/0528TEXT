@@ -16,6 +16,8 @@
   var preparedShareImagePromise = null;
   var preparedUploadTarget = null;
   var preparedUploadTargetPromise = null;
+  var preparedInviteCode = null;
+  var preparedInviteCodePromise = null;
 
   function ShareError(code, message) {
     this.name = "ShareError";
@@ -274,6 +276,7 @@
     };
   }
   function decodeUploadResponse(bytes) { return { imageUrl: decodeText(firstField(decodeFields(bytes), 1)) }; }
+  function decodeInviteCodeResponse(bytes) { return { inviteCode: decodeText(firstField(decodeFields(bytes), 1)) }; }
 
   function requestProtobuf(apiBase, endpoint, body, language, retried, onTiming) {
     var tokenStartedAt = now();
@@ -391,13 +394,18 @@
   function getPosterTitle(options) {
     return String((options && options.posterTitle) || getMeta("conso-share-poster-title") || document.title || "Community Picks").trim();
   }
-  function getShareLink(options) {
+  function getShareLink(options, inviteCode) {
     var configured = String((options && options.shareUrl) || getMeta("conso-share-url") || "").trim();
-    if (configured) return configured;
-    var url = new URL(window.location.href);
+    var url = new URL(configured || window.location.href, window.location.href);
     ["shareImagePreview", "inConso", "consoApp", "isConso", "token", "accessToken"].forEach(function (key) {
       url.searchParams.delete(key);
     });
+    ["inviteCode", "invite_code", "invitationCode", "invitation_code", "startapp"].forEach(function (key) {
+      url.searchParams.delete(key);
+    });
+    if (inviteCode) {
+      url.searchParams.set("inviteCode", inviteCode);
+    }
     return url.toString();
   }
   function loadImage(url) {
@@ -692,6 +700,30 @@
       throw error;
     });
   }
+  function prepareInviteCode(apiBase, language, onStage) {
+    if (preparedInviteCode !== null) {
+      emitStage(onStage, "invite_code.cache_hit", { hasInviteCode: Boolean(preparedInviteCode) });
+      return Promise.resolve(preparedInviteCode);
+    }
+    if (preparedInviteCodePromise) {
+      emitStage(onStage, "invite_code.waiting", {});
+      return preparedInviteCodePromise;
+    }
+    preparedInviteCodePromise = requestProtobuf(apiBase, "/gamefi/share/h5/invite-code", new Uint8Array(0), language, false, function (timing) {
+      emitStage(onStage, "invite_code.completed", { tokenMs: timing.tokenMs, requestMs: timing.requestMs, status: timing.status });
+    }).then(function (result) {
+      var response = decodeInviteCodeResponse(result || new Uint8Array(0));
+      preparedInviteCode = String(response.inviteCode || "").trim();
+      return preparedInviteCode;
+    });
+    return preparedInviteCodePromise.then(function (inviteCode) {
+      preparedInviteCodePromise = null;
+      return inviteCode;
+    }, function (error) {
+      preparedInviteCodePromise = null;
+      throw error;
+    });
+  }
   function prepareShareImage(options, onStage) {
     if (preparedShareImage) {
       emitStage(onStage, "capture.cache_hit", { width: preparedShareImage.width, height: preparedShareImage.height });
@@ -818,14 +850,22 @@
     if (!resourceId) {
       return Promise.resolve(emitShareResult({ errCode: 2, errMsg: "This page has no share resource ID." }, generationId, requestId));
     }
+    var inviteCodePromise = prepareInviteCode(getApiBase(options), getLanguage(options), function (stage, data) {
+      debugLog(stage, data);
+    }).catch(function (error) {
+      debugLog("invite_code.failed", { error: error && error.message ? error.message : "Unable to load the invite code." });
+      return "";
+    });
     return prepareShareImage(options, function (stage, data) {
       debugLog(stage, data);
     }).then(function (captured) {
       return uploadImage(getApiBase(options), resourceId, getLanguage(options), captured, function (stage, data) {
         debugLog(stage, data);
       }).then(function (imageUrl) {
-        debugLog("generate.completed", { totalDurationMs: elapsedMs(generatedStartedAt) });
-        return { errCode: 0, imageUrl: imageUrl, shareUrl: getShareLink(options), width: captured.width, height: captured.height };
+        return inviteCodePromise.then(function (inviteCode) {
+          debugLog("generate.completed", { totalDurationMs: elapsedMs(generatedStartedAt), hasInviteCode: Boolean(inviteCode) });
+          return { errCode: 0, imageUrl: imageUrl, shareUrl: getShareLink(options, inviteCode), width: captured.width, height: captured.height };
+        });
       });
     }).then(function (result) {
       return emitShareResult(result, generationId, requestId);
@@ -869,11 +909,23 @@
       debugLog("preload.presign.failed", { error: error && error.message ? error.message : "Unable to prepare the upload URL." });
     });
   }
+  function warmUpInviteCode() {
+    var options = {};
+    debugLog("preload.invite_code.start", {});
+    prepareInviteCode(getApiBase(options), getLanguage(options), function (stage, data) {
+      debugLog("preload." + stage, data);
+    }).then(function (inviteCode) {
+      debugLog("preload.invite_code.ready", { hasInviteCode: Boolean(inviteCode) });
+    }).catch(function (error) {
+      debugLog("preload.invite_code.failed", { error: error && error.message ? error.message : "Unable to load the invite code." });
+    });
+  }
 
   window.shareButtonVisibility = function () {
-    // 初始化分享按钮时并行预取 token、预签名地址和分享图，避免点击后串行等待。
+    // 初始化分享按钮时并行预取 token、预签名地址、邀请码和分享图，避免点击后串行等待。
     warmUpToken();
     warmUpUploadTarget();
+    warmUpInviteCode();
     warmUpShareResources();
     var result = getShareButtonVisibilityPayload();
     debugLog("visibility.result", { showShareButton: Boolean(getMeta("conso-share-resource-id")) });
