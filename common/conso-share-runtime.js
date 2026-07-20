@@ -173,12 +173,29 @@
   }
 
   function appendStylesheet() {
-    if (document.querySelector("link[data-conso-share-runtime-style]")) return;
+    var existing = document.querySelector("link[data-conso-share-runtime-style]");
+    if (existing) {
+      if (existing.getAttribute("data-conso-share-loaded") === "true" || existing.sheet) {
+        return Promise.resolve();
+      }
+      return new Promise(function (resolve, reject) {
+        existing.addEventListener("load", resolve, { once: true });
+        existing.addEventListener("error", reject, { once: true });
+      });
+    }
+
     var link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = runtimeBaseUrl + "conso-share-widget.css" + runtimeVersion;
     link.setAttribute("data-conso-share-runtime-style", "");
-    document.head.appendChild(link);
+    return new Promise(function (resolve, reject) {
+      link.onload = function () {
+        link.setAttribute("data-conso-share-loaded", "true");
+        resolve();
+      };
+      link.onerror = reject;
+      document.head.appendChild(link);
+    });
   }
 
   function loadScript(name) {
@@ -243,14 +260,17 @@
 
   function start() {
     syncInitialEnvironment();
-    appendStylesheet();
-    mountShell();
+    var shellReady = appendStylesheet().then(function () {
+      mountShell();
+    }, function (error) {
+      console.error("[ConsoShareRuntime] Unable to load widget styles", error);
+    });
     var protobufReady = loadScript("protobuf.min.js")
       .then(function () { return loadScript("h5_share_bridge_pb.js"); });
 
     return Promise.all([
       loadScript("html2canvas.min.js"),
-      loadScript("conso-share-widget.js"),
+      shellReady.then(function () { return loadScript("conso-share-widget.js"); }),
       loadScript("qrcode.js"),
       protobufReady
     ])

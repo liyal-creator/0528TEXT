@@ -10,7 +10,49 @@
 <meta name="conso-share-capture-mode" content="viewport" />
 <meta name="conso-share-api-base" content="https://testapinew.conso.network" />
 <meta name="conso-share-telegram-miniapp-domain" content="invite_miniApp_v2_bot" />
-<script defer src="https://cdn.conso.cloud/communityPicks/common/conso-share-runtime.js?v=20260720-load-1" data-conso-share-runtime data-conso-share-default-language="zh-Hans"></script>
+<script>
+(function () {
+  var runtimeUrl = "https://cdn.conso.cloud/communityPicks/common/conso-share-runtime.js?v=20260720-after-load-2";
+  var previousTokenInit = window.tokenInit;
+  window.__consoSharePendingImageRequests = window.__consoSharePendingImageRequests || [];
+
+  window.tokenInit = function (token) {
+    var normalized = String(token || "").trim();
+    if (normalized) {
+      window.__consoClientTokenReceived = true;
+      window.__consoClientToken = normalized;
+    }
+    if (typeof previousTokenInit === "function") return previousTokenInit.apply(this, arguments);
+    return undefined;
+  };
+
+  window.shareButtonVisibility = function () {
+    window.__consoShareVisibilityRequested = true;
+    return document.querySelector('meta[name="conso-share-resource-id"]') ? "CAE=" : "";
+  };
+
+  window.shareImageResult = function (payload) {
+    window.__consoSharePendingImageRequests.push(payload);
+    return true;
+  };
+
+  function loadRuntime() {
+    if (window.__consoShareRuntimeLoading) return;
+    window.__consoShareRuntimeLoading = true;
+    var script = document.createElement("script");
+    script.src = runtimeUrl;
+    script.setAttribute("data-conso-share-runtime", "");
+    script.setAttribute("data-conso-share-default-language", "zh-Hans");
+    document.head.appendChild(script);
+  }
+
+  if (document.readyState === "complete") {
+    window.setTimeout(loadRuntime, 0);
+  } else {
+    window.addEventListener("load", loadRuntime, { once: true });
+  }
+})();
+</script>
   <!-- conso-share-runtime:end -->
   <style>
     :root {

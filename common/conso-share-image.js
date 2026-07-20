@@ -965,6 +965,15 @@
     });
     return true;
   };
+  if (window.__consoShareVisibilityRequested) {
+    window.shareButtonVisibility();
+  }
+  var pendingImageRequests = Array.isArray(window.__consoSharePendingImageRequests)
+    ? window.__consoSharePendingImageRequests.splice(0)
+    : [];
+  pendingImageRequests.forEach(function (payload) {
+    window.shareImageResult(payload);
+  });
   if (getParam("shareImagePreview") === "1") {
     window.setTimeout(function () { preview().catch(showPreviewError); }, 0);
   }
