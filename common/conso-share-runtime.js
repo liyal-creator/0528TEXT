@@ -70,23 +70,14 @@
 
   function getConsoEnvironmentSignals() {
     var ua = window.navigator.userAgent || "";
-    var urlFlags = ["inConso", "consoApp", "isConso"].filter(isEnabledParam);
-    var reasons = urlFlags.map(function (name) { return "url:" + name; });
-    if (window.__consoClientTokenReceived) reasons.push("tokenInit");
-    if (window.conso_android) reasons.push("conso_android");
-    if (window.consoAppVersion) reasons.push("consoAppVersion");
-    if (window.__consoAppVersion) reasons.push("__consoAppVersion");
-    if (/Conso-iOS|Conso-Android|Conso-App/i.test(ua)) reasons.push("userAgent");
+    var tokenInitReceived = Boolean(window.__consoClientTokenReceived);
 
     return {
-      inConso: reasons.length > 0,
-      reasons: reasons,
-      tokenInitReceived: Boolean(window.__consoClientTokenReceived),
+      // 只有全屏 Web 会收到客户端回传的有效 tokenInit；内置浏览器即使暴露 bridge 也按外部环境处理。
+      inConso: tokenInitReceived,
+      tokenInitReceived: tokenInitReceived,
       consoAndroid: Boolean(window.conso_android),
       iosPerformAction: Boolean(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.performAction),
-      consoAppVersion: String(window.consoAppVersion || ""),
-      internalConsoAppVersion: String(window.__consoAppVersion || ""),
-      urlFlags: urlFlags,
       userAgent: ua
     };
   }
@@ -97,30 +88,53 @@
 
   function getEnvironmentDebugPanel() {
     if (!isEnvironmentDebugEnabled()) return null;
-    var panel = document.querySelector("[data-conso-environment-debug]");
-    if (panel) return panel;
-    if (!document.body) return null;
-    panel = document.createElement("pre");
-    panel.setAttribute("data-conso-environment-debug", "");
-    panel.style.cssText = "position:fixed;z-index:2147483647;left:12px;right:12px;bottom:12px;max-height:48vh;overflow:auto;box-sizing:border-box;margin:0;padding:12px;border:1px solid rgba(108,231,131,.55);border-radius:8px;background:rgba(0,0,0,.9);color:#6ce783;font:12px/1.55 -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;white-space:pre-wrap;word-break:break-word;box-shadow:0 4px 18px rgba(0,0,0,.35);pointer-events:auto;";
-    document.body.appendChild(panel);
+    var host = document.querySelector("[data-conso-environment-debug]");
+    if (host && host.__consoEnvironmentDebugOutput) {
+      return host.__consoEnvironmentDebugOutput;
+    }
+    if (!document.documentElement) return null;
+
+    host = document.createElement("div");
+    host.setAttribute("data-conso-environment-debug", "");
+    var hostStyles = {
+      position: "fixed",
+      zIndex: "2147483647",
+      left: "10px",
+      right: "10px",
+      bottom: "max(10px, env(safe-area-inset-bottom, 0px))",
+      width: "auto",
+      height: "58vh",
+      maxHeight: "calc(100vh - 20px)",
+      minHeight: "240px",
+      margin: "0",
+      padding: "0",
+      display: "block",
+      overflow: "hidden",
+      boxSizing: "border-box",
+      transform: "none",
+      opacity: "1",
+      visibility: "visible",
+      pointerEvents: "auto",
+      isolation: "isolate",
+      contain: "layout style paint"
+    };
+    Object.keys(hostStyles).forEach(function (name) {
+      host.style.setProperty(name.replace(/[A-Z]/g, function (letter) {
+        return "-" + letter.toLowerCase();
+      }), hostStyles[name], "important");
+    });
+
+    var root = host.attachShadow ? host.attachShadow({ mode: "open" }) : host;
+    var panel = document.createElement("pre");
+    panel.style.cssText = "display:block;width:100%;height:100%;overflow:auto;box-sizing:border-box;margin:0;padding:14px;border:1px solid rgba(108,231,131,.72);border-radius:8px;background:rgba(0,0,0,.94);color:#6ce783;font:13px/1.65 -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;box-shadow:0 4px 18px rgba(0,0,0,.35);-webkit-overflow-scrolling:touch;user-select:text;";
+    root.appendChild(panel);
+    host.__consoEnvironmentDebugOutput = panel;
+    document.documentElement.appendChild(host);
     return panel;
   }
 
   function yesOrNo(value) {
     return value ? "是" : "否";
-  }
-
-  function getReasonLabel(reason) {
-    var labels = {
-      tokenInit: "收到 tokenInit",
-      conso_android: "Android Bridge(conso_android)",
-      consoAppVersion: "版本变量(consoAppVersion)",
-      __consoAppVersion: "版本变量(__consoAppVersion)",
-      userAgent: "Conso User-Agent"
-    };
-    if (reason.indexOf("url:") === 0) return "URL 参数(" + reason.slice(4) + ")";
-    return labels[reason] || reason;
   }
 
   function getStageLabel(stage) {
@@ -137,21 +151,17 @@
     var panel = getEnvironmentDebugPanel();
     if (!panel) return;
     var detail = getConsoEnvironmentSignals();
-    var reasons = detail.reasons.length
-      ? detail.reasons.map(getReasonLabel).join("、")
-      : "无";
+    var reasons = detail.tokenInitReceived ? "收到 tokenInit" : "无";
     panel.textContent = [
       "Conso 环境诊断",
       "更新时间：" + new Date().toLocaleTimeString(),
       "当前阶段：" + getStageLabel(stage),
+      "最终规则：收到有效 tokenInit",
       "判断为 Conso：" + yesOrNo(detail.inConso),
       "命中依据：" + reasons,
       "收到 tokenInit：" + yesOrNo(detail.tokenInitReceived),
       "Android Bridge：" + yesOrNo(detail.consoAndroid),
       "iOS performAction：" + yesOrNo(detail.iosPerformAction) + "（仅诊断，不参与判断）",
-      "consoAppVersion：" + (detail.consoAppVersion || "无"),
-      "__consoAppVersion：" + (detail.internalConsoAppVersion || "无"),
-      "URL 判断参数：" + (detail.urlFlags.length ? detail.urlFlags.join("、") : "无"),
       "User-Agent：" + (detail.userAgent || "无")
     ].join("\n");
     panel.scrollTop = 0;
