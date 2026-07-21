@@ -10,7 +10,6 @@
   var tokenWaiters = [];
   var tokenWarmUpStarted = false;
   var shareGenerationInFlight = false;
-  var shareGenerationSequence = 0;
   var sharePreloadStarted = false;
   var preparedShareImage = null;
   var preparedShareImagePromise = null;
@@ -56,43 +55,6 @@
     var value = String((options && options.captureMode) || getMeta("conso-share-capture-mode") || "viewport").toLowerCase();
     return value === "full" ? "full" : "viewport";
   }
-  function isDebugEnabled() {
-    var value = String(getParam("consoShareDebug") || getMeta("conso-share-debug") || "").toLowerCase();
-    return value === "1" || value === "true" || value === "yes";
-  }
-  function now() {
-    return window.performance && typeof window.performance.now === "function" ? window.performance.now() : Date.now();
-  }
-  function elapsedMs(startedAt) {
-    return Math.max(0, Math.round(now() - startedAt));
-  }
-  function getDebugPanel() {
-    if (!isDebugEnabled()) return null;
-    var panel = document.querySelector("[data-conso-share-debug]");
-    if (panel) return panel;
-    panel = document.createElement("div");
-    panel.setAttribute("data-conso-share-debug", "");
-    panel.style.cssText = "position:fixed;z-index:2147483647;left:12px;right:12px;bottom:12px;max-height:42vh;overflow:auto;box-sizing:border-box;padding:10px 12px;border-radius:8px;background:rgba(0,0,0,.88);color:#6ce783;font:12px/1.5 -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;white-space:pre-wrap;word-break:break-word;box-shadow:0 4px 18px rgba(0,0,0,.35);pointer-events:none;";
-    document.body.appendChild(panel);
-    return panel;
-  }
-  function resetDebugPanel() {
-    var panel = getDebugPanel();
-    if (panel) panel.textContent = "";
-  }
-  function debugLog(stage, data) {
-    if (!isDebugEnabled()) return;
-    if (window.console && typeof window.console.info === "function") window.console.info("[ConsoShare] " + stage, data || {});
-    var panel = getDebugPanel();
-    if (!panel) return;
-    var detail = "";
-    if (data && Object.keys(data).length) {
-      try { detail = " " + JSON.stringify(data); }
-      catch (error) { detail = " " + String(data); }
-    }
-    panel.textContent += new Date().toLocaleTimeString() + " " + stage + detail + "\n";
-    panel.scrollTop = panel.scrollHeight;
-  }
   function sendBridgeData(eventName, eventData) {
     try {
       if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.performAction) {
@@ -130,9 +92,7 @@
       window.__consoClientTokenReceived = true;
       window.__consoClientToken = normalized;
       memoryToken = normalized;
-      var waiterCount = tokenWaiters.length;
       settleTokenWaiters(normalized);
-      debugLog("token.received", { waiterCount: waiterCount });
       if (environmentChanged) {
         window.dispatchEvent(new CustomEvent("conso-client-token-received"));
       }
@@ -289,18 +249,12 @@
   function decodeUploadResponse(bytes) { return { imageUrl: decodeText(firstField(decodeFields(bytes), 1)) }; }
   function decodeInviteCodeResponse(bytes) { return { inviteCode: decodeText(firstField(decodeFields(bytes), 1)) }; }
 
-  function requestProtobuf(apiBase, endpoint, body, language, retried, onTiming) {
-    var tokenStartedAt = now();
+  function requestProtobuf(apiBase, endpoint, body, language, retried) {
     return requestToken(false).then(function (token) {
-      var tokenMs = elapsedMs(tokenStartedAt);
-      var requestStartedAt = now();
       return window.fetch(apiBase + endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/x-protobuf", "Accept": "application/x-protobuf", "product-id": PRODUCT_ID, "x-access-token": token, "conso-language": language },
         body: body
-      }).then(function (response) {
-        if (typeof onTiming === "function") onTiming({ tokenMs: tokenMs, requestMs: elapsedMs(requestStartedAt), status: response.status });
-        return response;
       });
     }).then(function (response) {
       return response.arrayBuffer().then(function (buffer) {
@@ -311,7 +265,7 @@
           throw error;
         }
         if (decoded.errcode === 107 && !retried) {
-          return requestToken(true).then(function () { return requestProtobuf(apiBase, endpoint, body, language, true, onTiming); });
+          return requestToken(true).then(function () { return requestProtobuf(apiBase, endpoint, body, language, true); });
         }
         if (decoded.errcode !== 0) throw new ShareError("API_" + decoded.errcode, decoded.errmsg || "Share image API request failed.");
         if (!response.ok) throw new ShareError("API_REQUEST_FAILED", "Share image API request failed (HTTP " + response.status + ").");
@@ -365,7 +319,7 @@
         clonedRoot.setAttribute("data-theme", "dark");
         clonedBody.setAttribute("data-theme", "dark");
         clonedBody.classList.add("theme-dark");
-        Array.prototype.forEach.call(clonedDocument.querySelectorAll("[data-conso-share-entry], [data-conso-restricted-modal], [data-conso-share-debug], .conso-share-floating"), function (node) {
+        Array.prototype.forEach.call(clonedDocument.querySelectorAll("[data-conso-share-entry], [data-conso-restricted-modal], .conso-share-floating"), function (node) {
           node.style.setProperty("display", "none", "important");
         });
         captureBackgroundColor = getCaptureBackgroundColor([clonedTarget, clonedBody, clonedRoot], clonedDocument.defaultView);
@@ -375,7 +329,7 @@
         });
       },
       ignoreElements: function (element) {
-        return Boolean(element && element.closest && element.closest("[data-conso-share-entry], [data-conso-restricted-modal], [data-conso-share-debug], .conso-share-floating"));
+        return Boolean(element && element.closest && element.closest("[data-conso-share-entry], [data-conso-restricted-modal], .conso-share-floating"));
       }
     };
     if (captureMode === "full") {
@@ -408,7 +362,7 @@
   function getShareLink(options, inviteCode) {
     var configured = String((options && options.shareUrl) || getMeta("conso-share-url") || "").trim();
     var url = new URL(configured || window.location.href, window.location.href);
-    ["shareImagePreview", "inConso", "consoApp", "isConso", "token", "accessToken"].forEach(function (key) {
+    ["shareImagePreview", "consoShareDebug", "consoEnvDebug", "inConso", "consoApp", "isConso", "token", "accessToken"].forEach(function (key) {
       url.searchParams.delete(key);
     });
     ["inviteCode", "invite_code", "invitationCode", "invitation_code", "startapp"].forEach(function (key) {
@@ -683,26 +637,18 @@
       });
     });
   }
-  function emitStage(onStage, stage, data) {
-    if (typeof onStage === "function") onStage(stage, data || {});
-  }
   function hasValidUploadTarget() {
     return preparedUploadTarget
       && preparedUploadTarget.expiresAt > Date.now() + 15000;
   }
-  function prepareUploadTarget(apiBase, resourceId, language, onStage) {
+  function prepareUploadTarget(apiBase, resourceId, language) {
     if (hasValidUploadTarget()) {
-      emitStage(onStage, "presign.cache_hit", { expiresInMs: Math.max(0, preparedUploadTarget.expiresAt - Date.now()) });
       return Promise.resolve(preparedUploadTarget);
     }
     if (preparedUploadTargetPromise) {
-      emitStage(onStage, "presign.waiting", {});
       return preparedUploadTargetPromise;
     }
-    preparedUploadTargetPromise = requestProtobuf(apiBase, "/gamefi/share/h5/image/upload-url", encodeUploadRequest(resourceId, language), language, false, function (timing) {
-      emitStage(onStage, "token.ready", { durationMs: timing.tokenMs });
-      emitStage(onStage, "presign.completed", { durationMs: timing.requestMs, status: timing.status });
-    }).then(function (result) {
+    preparedUploadTargetPromise = requestProtobuf(apiBase, "/gamefi/share/h5/image/upload-url", encodeUploadRequest(resourceId, language), language, false).then(function (result) {
       var uploadInfo = decodeUploadUrlResponse(result || new Uint8Array(0));
       if (!uploadInfo.uploadUrl || !uploadInfo.imageUrl) throw new ShareError("UPLOAD_URL_INVALID", "Share image upload URL response is incomplete.");
       preparedUploadTarget = {
@@ -720,18 +666,14 @@
       throw error;
     });
   }
-  function prepareInviteCode(apiBase, language, onStage) {
+  function prepareInviteCode(apiBase, language) {
     if (preparedInviteCode !== null) {
-      emitStage(onStage, "invite_code.cache_hit", { hasInviteCode: Boolean(preparedInviteCode) });
       return Promise.resolve(preparedInviteCode);
     }
     if (preparedInviteCodePromise) {
-      emitStage(onStage, "invite_code.waiting", {});
       return preparedInviteCodePromise;
     }
-    preparedInviteCodePromise = requestProtobuf(apiBase, "/gamefi/share/h5/invite-code", new Uint8Array(0), language, false, function (timing) {
-      emitStage(onStage, "invite_code.completed", { tokenMs: timing.tokenMs, requestMs: timing.requestMs, status: timing.status });
-    }).then(function (result) {
+    preparedInviteCodePromise = requestProtobuf(apiBase, "/gamefi/share/h5/invite-code", new Uint8Array(0), language, false).then(function (result) {
       var response = decodeInviteCodeResponse(result || new Uint8Array(0));
       preparedInviteCode = String(response.inviteCode || "").trim();
       return preparedInviteCode;
@@ -744,22 +686,15 @@
       throw error;
     });
   }
-  function prepareShareImage(options, onStage) {
+  function prepareShareImage(options) {
     if (preparedShareImage) {
-      emitStage(onStage, "capture.cache_hit", { width: preparedShareImage.width, height: preparedShareImage.height });
-      emitStage(onStage, "poster.cache_hit", { bytes: preparedShareImage.blob.size });
       return Promise.resolve(preparedShareImage);
     }
     if (preparedShareImagePromise) {
-      emitStage(onStage, "poster.waiting", {});
       return preparedShareImagePromise;
     }
-    var captureStartedAt = now();
     preparedShareImagePromise = capturePage(getCaptureMode(options)).then(function (captured) {
-      emitStage(onStage, "capture.completed", { durationMs: elapsedMs(captureStartedAt), width: captured.width, height: captured.height });
-      var posterStartedAt = now();
       return composeSharePoster(captured, options).then(function (poster) {
-        emitStage(onStage, "poster.completed", { durationMs: elapsedMs(posterStartedAt), bytes: poster.blob.size });
         preparedShareImage = poster;
         return poster;
       });
@@ -772,26 +707,19 @@
       throw error;
     });
   }
-  function uploadImage(apiBase, resourceId, language, captured, onStage) {
-    return prepareUploadTarget(apiBase, resourceId, language, onStage)
+  function uploadImage(apiBase, resourceId, language, captured) {
+    return prepareUploadTarget(apiBase, resourceId, language)
       .then(function (uploadInfo) {
-        var cosStartedAt = now();
         return window.fetch(uploadInfo.uploadUrl, { method: "PUT", headers: { "Content-Type": captured.blob.type || SHARE_IMAGE_MIME_TYPE }, body: captured.blob })
           .then(function (response) {
             if (!response.ok) throw new ShareError("COS_UPLOAD_FAILED", "COS upload failed (HTTP " + response.status + ").");
-            emitStage(onStage, "cos.completed", { durationMs: elapsedMs(cosStartedAt), status: response.status });
             return uploadInfo.imageUrl;
-          }).catch(function (error) {
-            emitStage(onStage, "cos.failed", { durationMs: elapsedMs(cosStartedAt), error: error && error.message ? error.message : "COS upload failed" });
-            var fallbackStartedAt = now();
+          }).catch(function () {
             return captured.blob.arrayBuffer().then(function (buffer) {
-              return requestProtobuf(apiBase, "/gamefi/share/h5/image/upload", encodeUploadRequest(resourceId, language, new Uint8Array(buffer)), language, false, function (timing) {
-                emitStage(onStage, "fallback.request", { tokenMs: timing.tokenMs, requestMs: timing.requestMs, status: timing.status });
-              });
+              return requestProtobuf(apiBase, "/gamefi/share/h5/image/upload", encodeUploadRequest(resourceId, language, new Uint8Array(buffer)), language, false);
             }).then(function (fallbackResult) {
               var fallback = decodeUploadResponse(fallbackResult || new Uint8Array(0));
               if (!fallback.imageUrl) throw new ShareError("UPLOAD_FAILED", "Share image fallback upload returned no image URL.");
-              emitStage(onStage, "fallback.completed", { durationMs: elapsedMs(fallbackStartedAt) });
               return fallback.imageUrl;
             });
           });
@@ -842,56 +770,37 @@
       return { ok: true, width: captured.width, height: captured.height };
     });
   }
-  function emitShareResult(result, generationId, requestId) {
+  function emitShareResult(result, requestId) {
     result.requestId = requestId || "";
-    var sent = sendBridgeProtobuf("shareImageResult", "H5ShareGenerateResponse", result);
-    debugLog("generate.result", {
-      generationId: generationId,
-      requestId: result.requestId,
-      errCode: result && result.errCode,
-      sent: sent,
-      hasImageUrl: Boolean(result && result.imageUrl)
-    });
+    sendBridgeProtobuf("shareImageResult", "H5ShareGenerateResponse", result);
     return result;
   }
-  function generate(payload, generationId) {
+  function generate(payload) {
     var request;
     try {
       request = decodeBridgeMessage("H5ShareGenerateRequest", payload);
     } catch (error) {
-      return Promise.resolve(emitShareResult({ errCode: 1, errMsg: "Invalid H5 share request." }, generationId, ""));
+      return Promise.resolve(emitShareResult({ errCode: 1, errMsg: "Invalid H5 share request." }, ""));
     }
     var requestId = request && request.requestId ? request.requestId : "";
-    resetDebugPanel();
-    var generatedStartedAt = now();
-    debugLog("generate.start", { generationId: generationId, requestId: requestId });
     var options = {};
     var resourceId = getMeta("conso-share-resource-id");
     if (!resourceId) {
-      return Promise.resolve(emitShareResult({ errCode: 2, errMsg: "This page has no share resource ID." }, generationId, requestId));
+      return Promise.resolve(emitShareResult({ errCode: 2, errMsg: "This page has no share resource ID." }, requestId));
     }
-    var inviteCodePromise = prepareInviteCode(getApiBase(options), getLanguage(options), function (stage, data) {
-      debugLog(stage, data);
-    }).catch(function (error) {
-      debugLog("invite_code.failed", { error: error && error.message ? error.message : "Unable to load the invite code." });
+    var inviteCodePromise = prepareInviteCode(getApiBase(options), getLanguage(options)).catch(function () {
       return "";
     });
-    return prepareShareImage(options, function (stage, data) {
-      debugLog(stage, data);
-    }).then(function (captured) {
-      return uploadImage(getApiBase(options), resourceId, getLanguage(options), captured, function (stage, data) {
-        debugLog(stage, data);
-      }).then(function (imageUrl) {
+    return prepareShareImage(options).then(function (captured) {
+      return uploadImage(getApiBase(options), resourceId, getLanguage(options), captured).then(function (imageUrl) {
         return inviteCodePromise.then(function (inviteCode) {
-          debugLog("generate.completed", { totalDurationMs: elapsedMs(generatedStartedAt), hasInviteCode: Boolean(inviteCode) });
           return { errCode: 0, imageUrl: imageUrl, shareUrl: getShareLink(options, inviteCode), width: captured.width, height: captured.height };
         });
       });
     }).then(function (result) {
-      return emitShareResult(result, generationId, requestId);
+      return emitShareResult(result, requestId);
     }).catch(function (error) {
-      debugLog("generate.failed", { totalDurationMs: elapsedMs(generatedStartedAt), error: error && error.message ? error.message : "Unable to generate the share image." });
-      return emitShareResult({ errCode: 3, errMsg: error && error.message ? error.message : "Unable to generate the share image." }, generationId, requestId);
+      return emitShareResult({ errCode: 3, errMsg: error && error.message ? error.message : "Unable to generate the share image." }, requestId);
     });
   }
 
@@ -900,14 +809,7 @@
     sharePreloadStarted = true;
     var preload = function () {
       var options = {};
-      debugLog("preload.start", {});
-      prepareShareImage(options, function (stage, data) {
-        debugLog("preload." + stage, data);
-      }).then(function () {
-        debugLog("preload.poster.ready", {});
-      }).catch(function (error) {
-        debugLog("preload.poster.failed", { error: error && error.message ? error.message : "Unable to prepare the share image." });
-      });
+      prepareShareImage(options).catch(function () {});
     };
     if (document.readyState === "complete") {
       window.setTimeout(preload, 0);
@@ -920,25 +822,11 @@
     var resourceId = getMeta("conso-share-resource-id");
     if (!resourceId) return;
     var options = {};
-    debugLog("preload.presign.start", {});
-    prepareUploadTarget(getApiBase(options), resourceId, getLanguage(options), function (stage, data) {
-      debugLog("preload." + stage, data);
-    }).then(function (target) {
-      debugLog("preload.presign.ready", { expiresInMs: Math.max(0, target.expiresAt - Date.now()) });
-    }).catch(function (error) {
-      debugLog("preload.presign.failed", { error: error && error.message ? error.message : "Unable to prepare the upload URL." });
-    });
+    prepareUploadTarget(getApiBase(options), resourceId, getLanguage(options)).catch(function () {});
   }
   function warmUpInviteCode() {
     var options = {};
-    debugLog("preload.invite_code.start", {});
-    prepareInviteCode(getApiBase(options), getLanguage(options), function (stage, data) {
-      debugLog("preload." + stage, data);
-    }).then(function (inviteCode) {
-      debugLog("preload.invite_code.ready", { hasInviteCode: Boolean(inviteCode) });
-    }).catch(function (error) {
-      debugLog("preload.invite_code.failed", { error: error && error.message ? error.message : "Unable to load the invite code." });
-    });
+    prepareInviteCode(getApiBase(options), getLanguage(options)).catch(function () {});
   }
 
   window.shareButtonVisibility = function () {
@@ -947,18 +835,14 @@
     warmUpUploadTarget();
     warmUpInviteCode();
     warmUpShareResources();
-    var result = getShareButtonVisibilityPayload();
-    debugLog("visibility.result", { showShareButton: Boolean(getMeta("conso-share-resource-id")) });
-    return result;
+    return getShareButtonVisibilityPayload();
   };
   window.shareImageResult = function (payload) {
     if (shareGenerationInFlight) {
-      debugLog("generate.ignored", { reason: "in_flight" });
       return true;
     }
     shareGenerationInFlight = true;
-    var generationId = ++shareGenerationSequence;
-    generate(payload, generationId).then(function () {
+    generate(payload).then(function () {
       shareGenerationInFlight = false;
     }, function () {
       shareGenerationInFlight = false;

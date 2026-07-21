@@ -63,112 +63,9 @@
   window.__consoShareRuntimeBaseUrl = runtimeBaseUrl;
   window.ConsoShareLocale = { getCopy: getLocalizedCopy, normalize: normalizeLocale };
 
-  function isEnabledParam(name) {
-    var value = String(params.get(name) || "").trim().toLowerCase();
-    return value === "1" || value === "true" || value === "yes";
-  }
-
-  function getConsoEnvironmentSignals() {
-    var ua = window.navigator.userAgent || "";
-    var tokenInitReceived = Boolean(window.__consoClientTokenReceived);
-
-    return {
-      // 只有全屏 Web 会收到客户端回传的有效 tokenInit；内置浏览器即使暴露 bridge 也按外部环境处理。
-      inConso: tokenInitReceived,
-      tokenInitReceived: tokenInitReceived,
-      consoAndroid: Boolean(window.conso_android),
-      iosPerformAction: Boolean(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.performAction),
-      userAgent: ua
-    };
-  }
-
-  function isEnvironmentDebugEnabled() {
-    return isEnabledParam("consoEnvDebug");
-  }
-
-  function getEnvironmentDebugPanel() {
-    if (!isEnvironmentDebugEnabled()) return null;
-    var host = document.querySelector("[data-conso-environment-debug]");
-    if (host && host.__consoEnvironmentDebugOutput) {
-      return host.__consoEnvironmentDebugOutput;
-    }
-    if (!document.documentElement) return null;
-
-    host = document.createElement("div");
-    host.setAttribute("data-conso-environment-debug", "");
-    var hostStyles = {
-      position: "fixed",
-      zIndex: "2147483647",
-      left: "10px",
-      right: "10px",
-      bottom: "max(10px, env(safe-area-inset-bottom, 0px))",
-      width: "auto",
-      height: "58vh",
-      maxHeight: "calc(100vh - 20px)",
-      minHeight: "240px",
-      margin: "0",
-      padding: "0",
-      display: "block",
-      overflow: "hidden",
-      boxSizing: "border-box",
-      transform: "none",
-      opacity: "1",
-      visibility: "visible",
-      pointerEvents: "auto",
-      isolation: "isolate",
-      contain: "layout style paint"
-    };
-    Object.keys(hostStyles).forEach(function (name) {
-      host.style.setProperty(name.replace(/[A-Z]/g, function (letter) {
-        return "-" + letter.toLowerCase();
-      }), hostStyles[name], "important");
-    });
-
-    var root = host.attachShadow ? host.attachShadow({ mode: "open" }) : host;
-    var panel = document.createElement("pre");
-    panel.style.cssText = "display:block;width:100%;height:100%;overflow:auto;box-sizing:border-box;margin:0;padding:14px;border:1px solid rgba(108,231,131,.72);border-radius:8px;background:rgba(0,0,0,.94);color:#6ce783;font:13px/1.65 -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;box-shadow:0 4px 18px rgba(0,0,0,.35);-webkit-overflow-scrolling:touch;user-select:text;";
-    root.appendChild(panel);
-    host.__consoEnvironmentDebugOutput = panel;
-    document.documentElement.appendChild(host);
-    return panel;
-  }
-
-  function yesOrNo(value) {
-    return value ? "是" : "否";
-  }
-
-  function getStageLabel(stage) {
-    var labels = {
-      "environment.synced": "环境状态已同步",
-      "tokenInit.received": "已收到 tokenInit",
-      "token.requested.ios": "已向 iOS 请求 Web Token",
-      "token.requested.android": "已向 Android 请求 Web Token"
-    };
-    return labels[stage] || stage;
-  }
-
-  function logConsoEnvironment(stage) {
-    var panel = getEnvironmentDebugPanel();
-    if (!panel) return;
-    var detail = getConsoEnvironmentSignals();
-    var reasons = detail.tokenInitReceived ? "收到 tokenInit" : "无";
-    panel.textContent = [
-      "Conso 环境诊断",
-      "更新时间：" + new Date().toLocaleTimeString(),
-      "当前阶段：" + getStageLabel(stage),
-      "最终规则：收到有效 tokenInit",
-      "判断为 Conso：" + yesOrNo(detail.inConso),
-      "命中依据：" + reasons,
-      "收到 tokenInit：" + yesOrNo(detail.tokenInitReceived),
-      "Android Bridge：" + yesOrNo(detail.consoAndroid),
-      "iOS performAction：" + yesOrNo(detail.iosPerformAction) + "（仅诊断，不参与判断）",
-      "User-Agent：" + (detail.userAgent || "无")
-    ].join("\n");
-    panel.scrollTop = 0;
-  }
-
   function isConsoApp() {
-    return getConsoEnvironmentSignals().inConso;
+    // 只有全屏 Web 会收到客户端回传的有效 tokenInit；内置浏览器即使暴露 bridge 也按外部环境处理。
+    return Boolean(window.__consoClientTokenReceived);
   }
 
   var previousTokenInit = window.tokenInit;
@@ -178,7 +75,6 @@
       var environmentChanged = !window.__consoClientTokenReceived;
       window.__consoClientTokenReceived = true;
       window.__consoClientToken = normalized;
-      logConsoEnvironment("tokenInit.received");
       if (environmentChanged) {
         window.dispatchEvent(new CustomEvent("conso-client-token-received"));
       }
@@ -196,7 +92,6 @@
           eventName: "getClientWebToken",
           eventData: JSON.stringify({})
         });
-        logConsoEnvironment("token.requested.ios");
         return;
       }
       if (window.conso_android && typeof window.conso_android.post === "function") {
@@ -205,7 +100,6 @@
           eventName: "getClientWebToken",
           eventData: JSON.stringify({})
         }));
-        logConsoEnvironment("token.requested.android");
       }
     } catch (error) {
       window.__consoClientTokenRequestSent = false;
@@ -265,7 +159,6 @@
     var theme = String(params.get("theme") || "").toLowerCase();
     root.classList.toggle("conso-share-in-app", isConsoApp());
     root.classList.toggle("conso-share-dark", theme === "dark" || params.get("isDark") === "1");
-    logConsoEnvironment("environment.synced");
   }
 
   function appendStylesheet() {

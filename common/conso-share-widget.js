@@ -120,6 +120,13 @@
       && href.indexOf("tel:") !== 0;
   }
 
+  // 兼容部分独立 H5 使用 role=link + JS 跳转的卡片，避免绕过 a 标签拦截。
+  function shouldRestrictRoleLink(link) {
+    if (!link || isConsoApp()) return false;
+    if (link.closest("[data-conso-open-app]")) return false;
+    return !link.hasAttribute("data-conso-pass-through");
+  }
+
   function syncState() {
     var inApp = isConsoApp();
     root.classList.toggle("conso-share-in-app", inApp);
@@ -139,6 +146,14 @@
 
     var anchor = target.closest && target.closest("a[href]");
     if (shouldRestrictLink(anchor)) {
+      event.preventDefault();
+      event.stopPropagation();
+      showDialog();
+      return;
+    }
+
+    var roleLink = target.closest && target.closest('[role="link"]');
+    if (shouldRestrictRoleLink(roleLink)) {
       event.preventDefault();
       event.stopPropagation();
       showDialog();
