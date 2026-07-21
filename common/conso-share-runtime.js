@@ -102,17 +102,59 @@
     if (!document.body) return null;
     panel = document.createElement("pre");
     panel.setAttribute("data-conso-environment-debug", "");
-    panel.style.cssText = "position:fixed;z-index:2147483647;left:8px;right:8px;top:8px;max-height:44vh;overflow:auto;box-sizing:border-box;margin:0;padding:10px;border:1px solid rgba(108,231,131,.55);border-radius:8px;background:rgba(0,0,0,.9);color:#6ce783;font:11px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:pre-wrap;word-break:break-all;pointer-events:auto;";
+    panel.style.cssText = "position:fixed;z-index:2147483647;left:12px;right:12px;bottom:12px;max-height:48vh;overflow:auto;box-sizing:border-box;margin:0;padding:12px;border:1px solid rgba(108,231,131,.55);border-radius:8px;background:rgba(0,0,0,.9);color:#6ce783;font:12px/1.55 -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;white-space:pre-wrap;word-break:break-word;box-shadow:0 4px 18px rgba(0,0,0,.35);pointer-events:auto;";
     document.body.appendChild(panel);
     return panel;
+  }
+
+  function yesOrNo(value) {
+    return value ? "是" : "否";
+  }
+
+  function getReasonLabel(reason) {
+    var labels = {
+      tokenInit: "收到 tokenInit",
+      conso_android: "Android Bridge(conso_android)",
+      consoAppVersion: "版本变量(consoAppVersion)",
+      __consoAppVersion: "版本变量(__consoAppVersion)",
+      userAgent: "Conso User-Agent"
+    };
+    if (reason.indexOf("url:") === 0) return "URL 参数(" + reason.slice(4) + ")";
+    return labels[reason] || reason;
+  }
+
+  function getStageLabel(stage) {
+    var labels = {
+      "environment.synced": "环境状态已同步",
+      "tokenInit.received": "已收到 tokenInit",
+      "token.requested.ios": "已向 iOS 请求 Web Token",
+      "token.requested.android": "已向 Android 请求 Web Token"
+    };
+    return labels[stage] || stage;
   }
 
   function logConsoEnvironment(stage) {
     var panel = getEnvironmentDebugPanel();
     if (!panel) return;
     var detail = getConsoEnvironmentSignals();
-    panel.textContent += new Date().toLocaleTimeString() + " " + stage + "\n" + JSON.stringify(detail, null, 2) + "\n";
-    panel.scrollTop = panel.scrollHeight;
+    var reasons = detail.reasons.length
+      ? detail.reasons.map(getReasonLabel).join("、")
+      : "无";
+    panel.textContent = [
+      "Conso 环境诊断",
+      "更新时间：" + new Date().toLocaleTimeString(),
+      "当前阶段：" + getStageLabel(stage),
+      "判断为 Conso：" + yesOrNo(detail.inConso),
+      "命中依据：" + reasons,
+      "收到 tokenInit：" + yesOrNo(detail.tokenInitReceived),
+      "Android Bridge：" + yesOrNo(detail.consoAndroid),
+      "iOS performAction：" + yesOrNo(detail.iosPerformAction) + "（仅诊断，不参与判断）",
+      "consoAppVersion：" + (detail.consoAppVersion || "无"),
+      "__consoAppVersion：" + (detail.internalConsoAppVersion || "无"),
+      "URL 判断参数：" + (detail.urlFlags.length ? detail.urlFlags.join("、") : "无"),
+      "User-Agent：" + (detail.userAgent || "无")
+    ].join("\n");
+    panel.scrollTop = 0;
   }
 
   function isConsoApp() {
