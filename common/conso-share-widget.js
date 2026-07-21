@@ -14,29 +14,9 @@
     return String(params.get(name) || "").trim();
   }
 
-  function isEnabledParam(name) {
-    var value = getParam(name).toLowerCase();
-    return value === "1" || value === "true" || value === "yes";
-  }
-
   function isConsoApp() {
-    // 0. URL 参数（保留：测试 / 显式 override 用）
-    if (isEnabledParam("inConso") || isEnabledParam("consoApp") || isEnabledParam("isConso")) return true;
-
-    var ua = window.navigator.userAgent || "";
-
-    // 1. Conso Android 专属 bridge；通用 iOS performAction 不能用于区分 Telegram。
-    var w = window;
-    if (w.__consoClientTokenReceived) return true;
-    if (w.conso_android) return true;
-
-    // 2. Conso 专属版本号注入变量。不能使用通用 appVersion，其他 WebView 也可能提供该变量。
-    if (w.consoAppVersion || w.__consoAppVersion) return true;
-
-    // 3. UA pattern（宽松：不要求严格版本号格式；只匹配 Conso，不匹配 Telegram 内置浏览器）
-    if (/Conso-iOS|Conso-Android|Conso-App/i.test(ua)) return true;
-
-    return false;
+    // 只有全屏 Web 会收到客户端回传的有效 tokenInit，内置浏览器统一按外部环境处理。
+    return Boolean(window.__consoClientTokenReceived);
   }
 
   function isDarkMode() {
