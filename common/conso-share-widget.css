@@ -220,7 +220,10 @@ html.conso-share-lock body {
 
 html.conso-share-in-app .conso-share-header,
 html.conso-share-in-app .conso-share-floating,
-html.conso-share-in-app .conso-share-modal {
+html.conso-share-in-app .conso-share-modal,
+html.conso-share-env-pending .conso-share-header,
+html.conso-share-env-pending .conso-share-floating,
+html.conso-share-env-pending .conso-share-modal {
   display: none !important;
 }
 

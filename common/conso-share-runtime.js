@@ -63,13 +63,29 @@
   window.__consoShareRuntimeBaseUrl = runtimeBaseUrl;
   window.ConsoShareLocale = { getCopy: getLocalizedCopy, normalize: normalizeLocale };
 
-  function isConsoApp() {
-    // 新客户端探测桥接能力；旧 iOS 全屏 Web 没有 conso_ios，回退到被动接收 tokenInit。
+  function hasConsoBridge() {
     return Boolean(
       (window.conso_android && typeof window.conso_android.post === "function")
       || (window.conso_ios && typeof window.conso_ios.post === "function")
-      || window.__consoClientTokenReceived === true
     );
+  }
+
+  function isConsoApp() {
+    return hasConsoBridge()
+      || window.__consoClientTokenReceived === true
+      || window.__consoEnvironmentState === "in-app";
+  }
+
+  function isEnvironmentPending() {
+    return !isConsoApp() && window.__consoEnvironmentState === "pending";
+  }
+
+  function setEnvironmentState(state) {
+    if (window.__consoEnvironmentState === state) return;
+    window.__consoEnvironmentState = state;
+    root.classList.toggle("conso-share-env-pending", state === "pending");
+    root.classList.toggle("conso-share-in-app", state === "in-app");
+    window.dispatchEvent(new CustomEvent("conso-environment-changed"));
   }
 
   var previousTokenInit = window.tokenInit;
@@ -80,7 +96,7 @@
       window.__consoClientTokenReceived = true;
       window.__consoClientToken = normalized;
       if (environmentChanged) {
-        root.classList.add("conso-share-in-app");
+        setEnvironmentState("in-app");
         window.dispatchEvent(new CustomEvent("conso-client-token-received"));
       }
     }
@@ -115,6 +131,10 @@
 
   function scheduleTelegramInviteOpen() {
     if (isConsoApp() || !getTelegramMiniAppDomain()) return;
+    if (isEnvironmentPending()) {
+      window.addEventListener("conso-environment-changed", scheduleTelegramInviteOpen, { once: true });
+      return;
+    }
 
     var timer = window.setTimeout(function () {
       timer = null;
@@ -138,7 +158,12 @@
 
   function syncInitialEnvironment() {
     var theme = String(params.get("theme") || "").toLowerCase();
-    root.classList.toggle("conso-share-in-app", isConsoApp());
+    var inApp = isConsoApp();
+    if (inApp && window.__consoEnvironmentState !== "in-app") {
+      setEnvironmentState("in-app");
+    }
+    root.classList.toggle("conso-share-in-app", inApp);
+    root.classList.toggle("conso-share-env-pending", !inApp && isEnvironmentPending());
     root.classList.toggle("conso-share-dark", theme === "dark" || params.get("isDark") === "1");
   }
 
@@ -255,6 +280,7 @@
   scheduleTelegramInviteOpen();
   window.addEventListener("pageshow", syncInitialEnvironment);
   window.addEventListener("conso-client-token-received", syncInitialEnvironment);
+  window.addEventListener("conso-environment-changed", syncInitialEnvironment);
   window.ConsoH5ShareReady = new Promise(function (resolve, reject) {
     function initialize() {
       start().then(resolve, reject);

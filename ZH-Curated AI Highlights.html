@@ -12,16 +12,32 @@
 <meta name="conso-share-telegram-miniapp-domain" content="invite_miniApp_v2_bot" />
 <script>
 (function () {
-  var runtimeUrl = "https://cdn.conso.cloud/communityPicks/common/conso-share-runtime.js?v=20260722-ios-token-fallback-1";
+  var runtimeUrl = "https://cdn.conso.cloud/communityPicks/common/conso-share-runtime.js?v=20260722-ios-env-pending-1";
   var previousTokenInit = window.tokenInit;
+  var root = document.documentElement;
   window.__consoSharePendingImageRequests = window.__consoSharePendingImageRequests || [];
+
+  function hasConsoBridge() {
+    return Boolean(
+      (window.conso_android && typeof window.conso_android.post === "function")
+      || (window.conso_ios && typeof window.conso_ios.post === "function")
+    );
+  }
+
+  function setEnvironmentState(state) {
+    if (window.__consoEnvironmentState === state) return;
+    window.__consoEnvironmentState = state;
+    root.classList.toggle("conso-share-env-pending", state === "pending");
+    root.classList.toggle("conso-share-in-app", state === "in-app");
+    window.dispatchEvent(new CustomEvent("conso-environment-changed"));
+  }
 
   window.tokenInit = function (token) {
     var normalized = String(token || "").trim();
     if (normalized) {
       window.__consoClientTokenReceived = true;
       window.__consoClientToken = normalized;
-      document.documentElement.classList.add("conso-share-in-app");
+      setEnvironmentState("in-app");
     }
     if (typeof previousTokenInit === "function") return previousTokenInit.apply(this, arguments);
     return undefined;
@@ -36,6 +52,48 @@
     window.__consoSharePendingImageRequests.push(payload);
     return true;
   };
+
+  function initializeEnvironment() {
+    if (hasConsoBridge()) {
+      setEnvironmentState("in-app");
+      return;
+    }
+
+    var userAgent = window.navigator.userAgent || "";
+    var isIos = /iPhone|iPad|iPod/i.test(userAgent)
+      || (window.navigator.platform === "MacIntel" && window.navigator.maxTouchPoints > 1);
+    var handler = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.performAction;
+    if (!isIos || !handler || typeof handler.postMessage !== "function") {
+      setEnvironmentState("external");
+      return;
+    }
+
+    setEnvironmentState("pending");
+    if (!window.__consoClientTokenRequestSent) {
+      try {
+        window.__consoClientTokenRequestSent = true;
+        handler.postMessage({ eventName: "getClientWebToken", eventData: "{}" });
+      } catch (error) {
+        window.__consoClientTokenRequestSent = false;
+        setEnvironmentState("external");
+        return;
+      }
+    }
+
+    var resolveExternal = function () {
+      window.setTimeout(function () {
+        if (window.__consoClientTokenReceived || hasConsoBridge()) {
+          setEnvironmentState("in-app");
+        } else {
+          setEnvironmentState("external");
+        }
+      }, 300);
+    };
+    if (document.readyState === "complete") resolveExternal();
+    else window.addEventListener("load", resolveExternal, { once: true });
+  }
+
+  initializeEnvironment();
 
   function loadRuntime() {
     if (window.__consoShareRuntimeLoading) return;

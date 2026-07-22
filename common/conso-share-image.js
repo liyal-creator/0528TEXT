@@ -363,14 +363,15 @@
   function getShareLink(options, inviteCode) {
     var configured = String((options && options.shareUrl) || getMeta("conso-share-url") || "").trim();
     var url = new URL(configured || window.location.href, window.location.href);
+    var resolvedInviteCode = String(inviteCode || "").trim();
     ["shareImagePreview", "consoShareDebug", "consoEnvDebug", "inConso", "consoApp", "isConso", "token", "accessToken"].forEach(function (key) {
       url.searchParams.delete(key);
     });
     ["inviteCode", "invite_code", "invitationCode", "invitation_code", "startapp"].forEach(function (key) {
       url.searchParams.delete(key);
     });
-    if (inviteCode) {
-      url.searchParams.set("inviteCode", inviteCode);
+    if (resolvedInviteCode) {
+      url.searchParams.set("inviteCode", resolvedInviteCode);
     }
     return url.toString();
   }
@@ -540,7 +541,7 @@
     context.fillStyle = gradient;
     context.fillRect(x, topY, width, regionHeight);
   }
-  function drawBottomSheet(context, options, logo, copy, pageBackgroundColor, dividerY, posterHeight, promptHeight) {
+  function drawBottomSheet(context, options, logo, copy, pageBackgroundColor, dividerY, posterHeight, promptHeight, inviteCode) {
     var width = 750;
     var pagePadding = 40;
     var prompt = copy.posterPrompt;
@@ -586,10 +587,10 @@
     context.save();
     roundedRect(context, qrX, qrY, qrBoxSize, qrBoxSize, 12);
     context.clip();
-    drawQrCode(context, getShareLink(options), qrX + qrPadding, qrY + qrPadding, qrSize);
+    drawQrCode(context, getShareLink(options, inviteCode), qrX + qrPadding, qrY + qrPadding, qrSize);
     context.restore();
   }
-  function composeSharePoster(captured, options) {
+  function composeSharePoster(captured, options, inviteCode) {
     var posterWidth = 750;
     // Community poster content uses half of the previous side inset for a fuller preview.
     var pagePadding = 20;
@@ -632,7 +633,7 @@
       drawPosterHeader(context, logo, getPosterTitle(options), copy);
       drawCapturedContent(context, captured, pagePadding, contentY, contentWidth, contentHeight);
       drawBlurAndDarkenOverlay(context, canvas, pagePadding, blurTopY, contentWidth, blurHeight, captured.pageBackgroundColor);
-      drawBottomSheet(context, options, logo, copy, captured.pageBackgroundColor, dividerY, posterHeight, blurHeight);
+      drawBottomSheet(context, options, logo, copy, captured.pageBackgroundColor, dividerY, posterHeight, blurHeight, inviteCode);
       return canvasToBlob(canvas, SHARE_IMAGE_MIME_TYPE, SHARE_IMAGE_QUALITY).then(function (blob) {
         return { blob: blob, canvas: canvas, width: posterWidth, height: posterHeight };
       });
@@ -687,15 +688,26 @@
       throw error;
     });
   }
-  function prepareShareImage(options) {
+  function prepareShareImage(options, inviteCodePromise) {
     if (preparedShareImage) {
       return Promise.resolve(preparedShareImage);
     }
     if (preparedShareImagePromise) {
       return preparedShareImagePromise;
     }
-    preparedShareImagePromise = capturePage(getCaptureMode(options)).then(function (captured) {
-      return composeSharePoster(captured, options).then(function (poster) {
+    var resolvedInviteCodePromise = Promise.resolve(inviteCodePromise).then(function (inviteCode) {
+      return String(inviteCode || "").trim();
+    }, function () {
+      return "";
+    });
+    preparedShareImagePromise = Promise.all([
+      capturePage(getCaptureMode(options)),
+      resolvedInviteCodePromise
+    ]).then(function (prepared) {
+      var captured = prepared[0];
+      var inviteCode = prepared[1];
+      return composeSharePoster(captured, options, inviteCode).then(function (poster) {
+        poster.inviteCode = inviteCode;
         preparedShareImage = poster;
         return poster;
       });
@@ -792,11 +804,9 @@
     var inviteCodePromise = prepareInviteCode(getApiBase(options), getLanguage(options)).catch(function () {
       return "";
     });
-    return prepareShareImage(options).then(function (captured) {
+    return prepareShareImage(options, inviteCodePromise).then(function (captured) {
       return uploadImage(getApiBase(options), resourceId, getLanguage(options), captured).then(function (imageUrl) {
-        return inviteCodePromise.then(function (inviteCode) {
-          return { errCode: 0, imageUrl: imageUrl, shareUrl: getShareLink(options, inviteCode), width: captured.width, height: captured.height };
-        });
+        return { errCode: 0, imageUrl: imageUrl, shareUrl: getShareLink(options, captured.inviteCode), width: captured.width, height: captured.height };
       });
     }).then(function (result) {
       return emitShareResult(result, requestId);
@@ -810,7 +820,10 @@
     sharePreloadStarted = true;
     var preload = function () {
       var options = {};
-      prepareShareImage(options).catch(function () {});
+      var inviteCodePromise = prepareInviteCode(getApiBase(options), getLanguage(options)).catch(function () {
+        return "";
+      });
+      prepareShareImage(options, inviteCodePromise).catch(function () {});
     };
     if (document.readyState === "complete") {
       window.setTimeout(preload, 0);

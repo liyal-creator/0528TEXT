@@ -15,12 +15,16 @@
   }
 
   function isConsoApp() {
-    // 新客户端探测桥接能力；旧 iOS 全屏 Web 回退到被动接收 tokenInit。
     return Boolean(
       (window.conso_android && typeof window.conso_android.post === "function")
       || (window.conso_ios && typeof window.conso_ios.post === "function")
       || window.__consoClientTokenReceived === true
+      || window.__consoEnvironmentState === "in-app"
     );
+  }
+
+  function isEnvironmentPending() {
+    return !isConsoApp() && window.__consoEnvironmentState === "pending";
   }
 
   function isDarkMode() {
@@ -52,7 +56,7 @@
   }
 
   function openConsoApp() {
-    if (isConsoApp()) return;
+    if (isConsoApp() || isEnvironmentPending()) return;
 
     var deepLink = getParam("deeplink")
       || getParam("openUrl")
@@ -84,7 +88,7 @@
   }
 
   function showDialog() {
-    if (!modal || isConsoApp()) return;
+    if (!modal || isConsoApp() || isEnvironmentPending()) return;
     modal.hidden = false;
     root.classList.add("conso-share-lock");
     var confirm = document.querySelector("[data-conso-dialog-confirm]");
@@ -112,7 +116,7 @@
   }
 
   function shouldRestrictLink(anchor) {
-    if (!anchor || isConsoApp()) return false;
+    if (!anchor || isConsoApp() || isEnvironmentPending()) return false;
     if (anchor.closest("[data-conso-open-app]")) return false;
     if (anchor.hasAttribute("data-conso-pass-through")) return false;
     if (isSamePageAnchor(anchor)) return false;
@@ -126,16 +130,18 @@
 
   // 兼容部分独立 H5 使用 role=link + JS 跳转的卡片，避免绕过 a 标签拦截。
   function shouldRestrictRoleLink(link) {
-    if (!link || isConsoApp()) return false;
+    if (!link || isConsoApp() || isEnvironmentPending()) return false;
     if (link.closest("[data-conso-open-app]")) return false;
     return !link.hasAttribute("data-conso-pass-through");
   }
 
   function syncState() {
     var inApp = isConsoApp();
+    var pending = !inApp && isEnvironmentPending();
     root.classList.toggle("conso-share-in-app", inApp);
+    root.classList.toggle("conso-share-env-pending", pending);
     root.classList.toggle("conso-share-dark", isDarkMode());
-    body.classList.toggle("conso-share-has-promo", !inApp);
+    body.classList.toggle("conso-share-has-promo", !inApp && !pending);
   }
 
   document.addEventListener("click", function (event) {
@@ -187,6 +193,10 @@
 
   syncState();
   window.addEventListener("conso-client-token-received", function () {
+    closeDialog();
+    syncState();
+  });
+  window.addEventListener("conso-environment-changed", function () {
     closeDialog();
     syncState();
   });
