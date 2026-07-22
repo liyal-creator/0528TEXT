@@ -26,7 +26,7 @@ param(
 
     [string]$Language,
 
-    [string]$RuntimeVersion = "20260721-role-link-1"
+    [string]$RuntimeVersion = "20260721-role-link-capability-2"
 )
 
 Set-StrictMode -Version Latest

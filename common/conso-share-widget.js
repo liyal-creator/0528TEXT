@@ -15,8 +15,11 @@
   }
 
   function isConsoApp() {
-    // 只有全屏 Web 会收到客户端回传的有效 tokenInit，内置浏览器统一按外部环境处理。
-    return Boolean(window.__consoClientTokenReceived);
+    // 仅探测客户端注入的桥接能力，不通过请求 token 判断运行环境。
+    return Boolean(
+      (window.conso_android && typeof window.conso_android.post === "function")
+      || (window.conso_ios && typeof window.conso_ios.post === "function")
+    );
   }
 
   function isDarkMode() {
@@ -182,5 +185,4 @@
   });
 
   syncState();
-  window.addEventListener("conso-client-token-received", syncState);
 })();

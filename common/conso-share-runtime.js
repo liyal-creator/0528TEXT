@@ -64,8 +64,11 @@
   window.ConsoShareLocale = { getCopy: getLocalizedCopy, normalize: normalizeLocale };
 
   function isConsoApp() {
-    // 只有全屏 Web 会收到客户端回传的有效 tokenInit；内置浏览器即使暴露 bridge 也按外部环境处理。
-    return Boolean(window.__consoClientTokenReceived);
+    // 仅探测客户端注入的桥接能力，不通过请求 token 判断运行环境。
+    return Boolean(
+      (window.conso_android && typeof window.conso_android.post === "function")
+      || (window.conso_ios && typeof window.conso_ios.post === "function")
+    );
   }
 
   var previousTokenInit = window.tokenInit;
@@ -82,30 +85,6 @@
     if (typeof previousTokenInit === "function") return previousTokenInit.apply(this, arguments);
     return undefined;
   };
-
-  function requestClientTokenForEnvironment() {
-    if (window.__consoClientTokenRequestSent) return;
-    try {
-      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.performAction) {
-        window.__consoClientTokenRequestSent = true;
-        window.webkit.messageHandlers.performAction.postMessage({
-          eventName: "getClientWebToken",
-          eventData: JSON.stringify({})
-        });
-        return;
-      }
-      if (window.conso_android && typeof window.conso_android.post === "function") {
-        window.__consoClientTokenRequestSent = true;
-        window.conso_android.post(JSON.stringify({
-          eventName: "getClientWebToken",
-          eventData: JSON.stringify({})
-        }));
-      }
-    } catch (error) {
-      window.__consoClientTokenRequestSent = false;
-      // Telegram 或旧版 WebView 不支持该事件时保持站外展示。
-    }
-  }
 
   function getInviteCode() {
     for (var index = 0; index < INVITE_CODE_PARAM_NAMES.length; index += 1) {
@@ -273,8 +252,6 @@
   syncInitialEnvironment();
   scheduleTelegramInviteOpen();
   window.addEventListener("pageshow", syncInitialEnvironment);
-  window.addEventListener("conso-client-token-received", syncInitialEnvironment);
-  requestClientTokenForEnvironment();
   window.ConsoH5ShareReady = new Promise(function (resolve, reject) {
     function initialize() {
       start().then(resolve, reject);
