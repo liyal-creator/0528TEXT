@@ -10,7 +10,8 @@
   var root = document.documentElement;
   var params = new URLSearchParams(window.location.search || "");
   var defaultLanguage = runtimeScript ? runtimeScript.getAttribute("data-conso-share-default-language") : "";
-  var TELEGRAM_AUTO_OPEN_DELAY_MS = 1000;
+  var DEFAULT_CONSO_DEEP_LINK = "conso.tg://open";
+  var TELEGRAM_AUTO_OPEN_DELAY_MS = 3000;
   var INVITE_CODE_PARAM_NAMES = ["inviteCode", "invite_code", "invitationCode", "invitation_code", "startapp"];
 
   var localizedCopy = {
@@ -129,19 +130,35 @@
       : deepLink;
   }
 
+  function getConsoDeepLink() {
+    return String(
+      params.get("deeplink")
+      || params.get("openUrl")
+      || params.get("consoDeepLink")
+      || DEFAULT_CONSO_DEEP_LINK
+    ).trim();
+  }
+
   function scheduleTelegramInviteOpen() {
-    if (isConsoApp() || !getTelegramMiniAppDomain()) return;
+    if (isConsoApp()) return;
     if (isEnvironmentPending()) {
       window.addEventListener("conso-environment-changed", scheduleTelegramInviteOpen, { once: true });
       return;
     }
 
+    var consoDeepLink = getConsoDeepLink();
+    if (consoDeepLink && document.visibilityState !== "hidden") {
+      window.location.href = consoDeepLink;
+    }
+
+    var telegramDeepLink = getTelegramInviteDeepLink();
+    if (!telegramDeepLink) return;
+
     var timer = window.setTimeout(function () {
       timer = null;
-      // 原生 bridge 可能晚于页面脚本注入，跳转前必须重新判断一次。
+      // Conso 唤起成功时页面会进入后台；仍停留在前台才尝试邀请 Mini App。
       if (isConsoApp() || document.visibilityState === "hidden") return;
-      var deepLink = getTelegramInviteDeepLink();
-      if (deepLink) window.location.href = deepLink;
+      window.location.href = telegramDeepLink;
     }, TELEGRAM_AUTO_OPEN_DELAY_MS);
 
     function cancelAutoOpen() {
