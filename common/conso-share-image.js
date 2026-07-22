@@ -17,6 +17,7 @@
   var preparedUploadTargetPromise = null;
   var preparedInviteCode = null;
   var preparedInviteCodePromise = null;
+  var shareWarmUpScheduled = false;
 
   function ShareError(code, message) {
     this.name = "ShareError";
@@ -829,12 +830,46 @@
     prepareInviteCode(getApiBase(options), getLanguage(options)).catch(function () {});
   }
 
+  function hasConsoBridge() {
+    return Boolean(
+      (window.conso_android && typeof window.conso_android.post === "function")
+      || (window.conso_ios && typeof window.conso_ios.post === "function")
+    );
+  }
+
+  // 首屏完成后再独立预热分享资源，避免原生查询分享按钮时触发重任务。
+  function scheduleShareWarmUp() {
+    if (shareWarmUpScheduled || !hasConsoBridge() || !getMeta("conso-share-resource-id")) return;
+    shareWarmUpScheduled = true;
+
+    var warmUp = function () {
+      warmUpToken();
+      warmUpUploadTarget();
+      warmUpInviteCode();
+      warmUpShareResources();
+    };
+    var runWhenIdle = function () {
+      if (typeof window.requestIdleCallback === "function") {
+        window.requestIdleCallback(warmUp, { timeout: 2000 });
+      } else {
+        window.setTimeout(warmUp, 1200);
+      }
+    };
+    var runAfterFirstPaint = function () {
+      window.requestAnimationFrame(function () {
+        window.requestAnimationFrame(runWhenIdle);
+      });
+    };
+
+    if (document.readyState === "complete") {
+      runAfterFirstPaint();
+    } else {
+      window.addEventListener("load", runAfterFirstPaint, { once: true });
+    }
+  }
+
   window.shareButtonVisibility = function () {
-    // 初始化分享按钮时并行预取 token、预签名地址、邀请码和分享图，避免点击后串行等待。
-    warmUpToken();
-    warmUpUploadTarget();
-    warmUpInviteCode();
-    warmUpShareResources();
+    // 纯查询接口：仅返回是否显示原生分享按钮，不触发预热或网络请求。
     return getShareButtonVisibilityPayload();
   };
   window.shareImageResult = function (payload) {
@@ -861,5 +896,5 @@
   if (getParam("shareImagePreview") === "1") {
     window.setTimeout(function () { preview().catch(showPreviewError); }, 0);
   }
-  warmUpToken();
+  scheduleShareWarmUp();
 })();
