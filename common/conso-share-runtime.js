@@ -64,10 +64,11 @@
   window.ConsoShareLocale = { getCopy: getLocalizedCopy, normalize: normalizeLocale };
 
   function isConsoApp() {
-    // 仅探测客户端注入的桥接能力，不通过请求 token 判断运行环境。
+    // 新客户端探测桥接能力；旧 iOS 全屏 Web 没有 conso_ios，回退到被动接收 tokenInit。
     return Boolean(
       (window.conso_android && typeof window.conso_android.post === "function")
       || (window.conso_ios && typeof window.conso_ios.post === "function")
+      || window.__consoClientTokenReceived === true
     );
   }
 
@@ -79,6 +80,7 @@
       window.__consoClientTokenReceived = true;
       window.__consoClientToken = normalized;
       if (environmentChanged) {
+        root.classList.add("conso-share-in-app");
         window.dispatchEvent(new CustomEvent("conso-client-token-received"));
       }
     }
@@ -252,6 +254,7 @@
   syncInitialEnvironment();
   scheduleTelegramInviteOpen();
   window.addEventListener("pageshow", syncInitialEnvironment);
+  window.addEventListener("conso-client-token-received", syncInitialEnvironment);
   window.ConsoH5ShareReady = new Promise(function (resolve, reject) {
     function initialize() {
       start().then(resolve, reject);

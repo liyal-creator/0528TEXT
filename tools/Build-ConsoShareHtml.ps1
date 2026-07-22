@@ -26,7 +26,7 @@ param(
 
     [string]$Language,
 
-    [string]$RuntimeVersion = "20260722-share-warmup-1"
+    [string]$RuntimeVersion = "20260722-ios-token-fallback-1"
 )
 
 Set-StrictMode -Version Latest
@@ -98,6 +98,7 @@ $runtimeBlock = @"
     if (normalized) {
       window.__consoClientTokenReceived = true;
       window.__consoClientToken = normalized;
+      document.documentElement.classList.add("conso-share-in-app");
     }
     if (typeof previousTokenInit === "function") return previousTokenInit.apply(this, arguments);
     return undefined;

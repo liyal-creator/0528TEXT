@@ -15,10 +15,11 @@
   }
 
   function isConsoApp() {
-    // 仅探测客户端注入的桥接能力，不通过请求 token 判断运行环境。
+    // 新客户端探测桥接能力；旧 iOS 全屏 Web 回退到被动接收 tokenInit。
     return Boolean(
       (window.conso_android && typeof window.conso_android.post === "function")
       || (window.conso_ios && typeof window.conso_ios.post === "function")
+      || window.__consoClientTokenReceived === true
     );
   }
 
@@ -185,4 +186,8 @@
   });
 
   syncState();
+  window.addEventListener("conso-client-token-received", function () {
+    closeDialog();
+    syncState();
+  });
 })();
