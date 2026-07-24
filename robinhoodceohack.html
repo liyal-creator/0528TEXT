@@ -4,7 +4,33 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#F2F3F5">
-  <title></title>
+  <title>Fake Post, Real Trades</title>
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const value = (params.get("language") || params.get("lang") || "en").toLowerCase();
+      const titles = {
+        en: "Fake Post, Real Trades",
+        zhHans: "假消息，真交易",
+        zhHant: "假消息，真交易",
+        ru: "Фейковый пост, реальные сделки",
+        ar: "منشور مزيف، صفقات حقيقية"
+      };
+      const simplified = ["zh-hans-raw", "zh-cn", "zhcn", "zhhans", "zh-hans"];
+      const traditional = ["zh", "zh-hant-raw", "zh-hant", "zhhant", "zh-tw", "zhtw", "zh-hk", "zhhk"];
+      let language = "en";
+
+      if (simplified.indexOf(value) > -1) {
+        language = "zhHans";
+      } else if (traditional.indexOf(value) > -1) {
+        language = "zhHant";
+      } else if (["ru", "ar", "en"].indexOf(value) > -1) {
+        language = value;
+      }
+
+      document.title = titles[language];
+    })();
+  </script>
   <style>
     :root {
       --primary: #44D564;
@@ -732,7 +758,7 @@
 
       const copy = {
         en: {
-          pageTitle: "Everyone Knew, Then Bought Anyway",
+          pageTitle: "Fake Post, Real Trades",
           heroTag: "Onchain incident",
           heroTitle: "Everyone knew it was a hack, then bought anyway.",
           heroSummary: "Robinhood CEO Vlad Tenev’s X account suddenly announced the $VLAD meme coin. The comments said “hacked”; the chain asked for the contract address.",
@@ -806,7 +832,7 @@
           footer: "This article discusses an incident and market behavior only. It is not investment advice. Meme coins are highly volatile and onchain trades are irreversible; independently verify contracts and sources."
         },
         zhHans: {
-          pageTitle: "大家都猜到是盗号了，然后还是买了",
+          pageTitle: "假消息，真交易",
           heroTag: "链上安全事件",
           heroTitle: "大家都猜到是盗号了，然后还是买了。",
           heroSummary: "Robinhood CEO Vlad Tenev 的 X 账号突然官宣 Meme 币 $VLAD。评论区第一反应是“像盗号”，链上第一反应却是“合约地址呢？”",
@@ -880,7 +906,7 @@
           footer: "本文仅用于事件信息与市场现象讨论，不构成投资建议。Meme 币波动剧烈，链上交易不可逆，请独立核验合约与信息来源。"
         },
         zhHant: {
-          pageTitle: "大家都猜到是盜號了，然後還是買了",
+          pageTitle: "假消息，真交易",
           heroTag: "鏈上安全事件",
           heroTitle: "大家都猜到是盜號了，然後還是買了。",
           heroSummary: "Robinhood CEO Vlad Tenev 的 X 帳號突然宣佈推出 Meme 幣 $VLAD。留言區第一反應是「像盜號」，鏈上第一反應卻是「合約地址呢？」",
@@ -954,7 +980,7 @@
           footer: "本文僅用於事件資訊與市場現象討論，不構成投資建議。Meme 幣波動劇烈，鏈上交易不可逆，請獨立核驗合約與資訊來源。"
         },
         ru: {
-          pageTitle: "Все поняли, что это взлом — и купили",
+          pageTitle: "Фейковый пост, реальные сделки",
           heroTag: "Инцидент в блокчейне",
           heroTitle: "Все поняли, что аккаунт взломан, — и всё равно купили.",
           heroSummary: "В X-аккаунте главы Robinhood Влада Тенева внезапно объявили о мемкоине $VLAD. В комментариях сразу сказали «взлом», а в блокчейне спросили адрес контракта.",
@@ -1028,7 +1054,7 @@
           footer: "Материал посвящён инциденту и поведению рынка и не является инвестиционной рекомендацией. Мемкоины крайне волатильны, а сделки в блокчейне необратимы; проверяйте контракты и источники самостоятельно."
         },
         ar: {
-          pageTitle: "عرف الجميع أنه اختراق… ثم اشتروا",
+          pageTitle: "منشور مزيف، صفقات حقيقية",
           heroTag: "حادث أمني على السلسلة",
           heroTitle: "عرف الجميع أن الحساب مخترق، ثم اشتروا رغم ذلك.",
           heroSummary: "أعلن حساب فلاد تينيف، الرئيس التنفيذي لـ Robinhood، على X فجأة عن عملة الميم $VLAD. قالت التعليقات فوراً «اختراق»، بينما سأل المتداولون على السلسلة عن عنوان العقد.",
@@ -1132,6 +1158,7 @@
       document.documentElement.lang = localeMeta[language].lang;
       document.documentElement.dir = localeMeta[language].dir;
       document.documentElement.dataset.theme = theme;
+      document.title = copy[language].pageTitle;
       document.querySelector('meta[name="theme-color"]').setAttribute("content", isDark ? "#141414" : "#F2F3F5");
       document.querySelectorAll("[data-i18n]").forEach(function (element) {
         const key = element.getAttribute("data-i18n");
