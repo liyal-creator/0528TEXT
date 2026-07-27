@@ -408,27 +408,6 @@
     var drawHeight = image.height * scale;
     context.drawImage(image, x + (width - drawWidth) / 2, y + (height - drawHeight) / 2, drawWidth, drawHeight);
   }
-  function wrapText(context, value, maxWidth) {
-    var lines = [];
-    var current = "";
-    Array.prototype.forEach.call(String(value || ""), function (character) {
-      var candidate = current + character;
-      if (current && context.measureText(candidate).width > maxWidth) {
-        lines.push(current);
-        current = character;
-      } else {
-        current = candidate;
-      }
-    });
-    if (current) lines.push(current);
-    return lines;
-  }
-  function drawCenteredText(context, value, centerX, topY, maxWidth, lineHeight, maxLines) {
-    var lines = wrapText(context, value, maxWidth).slice(0, maxLines);
-    lines.forEach(function (line, index) {
-      context.fillText(line, centerX - context.measureText(line).width / 2, topY + index * lineHeight);
-    });
-  }
   function drawQrCode(context, value, x, y, size) {
     if (typeof window.qrcode !== "function") {
       throw new ShareError("QR_LIBRARY_UNAVAILABLE", "The embedded QR code library is unavailable.");
@@ -498,8 +477,8 @@
     context.fillText(label, tagX + 12 + logoWidth + 10, tagY + 35);
 
     context.fillStyle = "#f5f7f5";
-    context.font = "600 26px -apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif";
-    drawCenteredText(context, title, 375, 124, 590, 32, 1);
+    context.font = "600 52px -apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif";
+    context.fillText(title, 40, 164, 670);
   }
   function drawCapturedContent(context, captured, x, y, width, height) {
     var sourceWidth = captured.width;
@@ -541,7 +520,7 @@
     context.fillStyle = gradient;
     context.fillRect(x, topY, width, regionHeight);
   }
-  function drawBottomSheet(context, options, logo, copy, pageBackgroundColor, dividerY, posterHeight, promptHeight, inviteCode) {
+  function drawBottomSheet(context, options, logo, copy, dividerY, promptHeight, inviteCode) {
     var width = 750;
     var pagePadding = 40;
     var prompt = copy.posterPrompt;
@@ -555,11 +534,6 @@
     drawSpark(context, promptX + Math.round(sparkWidth / 2), dividerY - Math.round(promptHeight / 2), sparkRadius, "#44d564");
     context.fillStyle = "#44d564";
     context.fillText(prompt, promptX + sparkWidth + promptGap, promptBaseline);
-
-    context.fillStyle = pageBackgroundColor || "#10131A";
-    context.fillRect(0, dividerY + 1, width, posterHeight - dividerY - 1);
-    context.fillStyle = "#303030";
-    context.fillRect(pagePadding, dividerY, width - pagePadding * 2, 1);
 
     var qrBoxSize = 170;
     var qrPadding = 14;
@@ -595,7 +569,7 @@
     // Community poster content uses half of the previous side inset for a fuller preview.
     var pagePadding = 20;
     // Java uses the same 16% share texture as the poster base; reserve a visible header area for it.
-    var contentY = 160;
+    var contentY = 196;
     var contentWidth = posterWidth - pagePadding * 2;
     // Preserve the captured mobile viewport ratio so the poster always shows one complete phone screen.
     var contentHeight = Math.max(1, Math.round(contentWidth * captured.height / captured.width));
@@ -633,7 +607,7 @@
       drawPosterHeader(context, logo, getPosterTitle(options), copy);
       drawCapturedContent(context, captured, pagePadding, contentY, contentWidth, contentHeight);
       drawBlurAndDarkenOverlay(context, canvas, pagePadding, blurTopY, contentWidth, blurHeight, captured.pageBackgroundColor);
-      drawBottomSheet(context, options, logo, copy, captured.pageBackgroundColor, dividerY, posterHeight, blurHeight, inviteCode);
+      drawBottomSheet(context, options, logo, copy, dividerY, blurHeight, inviteCode);
       return canvasToBlob(canvas, SHARE_IMAGE_MIME_TYPE, SHARE_IMAGE_QUALITY).then(function (blob) {
         return { blob: blob, canvas: canvas, width: posterWidth, height: posterHeight };
       });

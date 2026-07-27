@@ -26,7 +26,7 @@ param(
 
     [string]$Language,
 
-    [string]$RuntimeVersion = "20260722-conso-first-1"
+    [string]$RuntimeVersion = "20260727-poster-copy-1"
 )
 
 Set-StrictMode -Version Latest

@@ -16,33 +16,33 @@
 
   var localizedCopy = {
     en: {
-      getApp: "Get the app", openApp: "Open Conso", openInApp: "Open in app",
-      dialogTitle: "This feature is available in Conso", dialogDescription: "Open Conso for the full content and experience.",
+      getApp: "Get the App", openApp: "Open Conso", openInApp: "Open in App",
+      dialogTitle: "This feature is only available in Conso", dialogDescription: "Open Conso to enjoy the full experience.",
       cancel: "Cancel", confirm: "Allow", communityPicks: "Community Picks",
-      posterPrompt: "Open Conso to view the full content", posterFooter: "Open Conso to view full content"
+      posterPrompt: "Open Conso to view the full content", posterFooter: "Open Conso to view the full content"
     },
     zhHans: {
-      getApp: "获取应用", openApp: "打开 Conso", openInApp: "APP内打开",
-      dialogTitle: "该功能需在 Conso 中使用", dialogDescription: "前往 Conso，获取完整内容与功能。",
+      getApp: "获取App", openApp: "打开Conso", openInApp: "App内打开",
+      dialogTitle: "该功能需在Conso中使用", dialogDescription: "前往Conso，获取完整内容与功能。",
       cancel: "取消", confirm: "允许", communityPicks: "社区精选",
-      posterPrompt: "打开Conso查看完整内容", posterFooter: "前往 Conso，查看完整内容"
+      posterPrompt: "打开Conso查看完整内容", posterFooter: "前往Conso，查看完整内容"
     },
     zhHant: {
-      getApp: "取得應用程式", openApp: "開啟 Conso", openInApp: "在 APP 內開啟",
-      dialogTitle: "此功能需在 Conso 中使用", dialogDescription: "前往 Conso，取得完整內容與功能。",
-      cancel: "取消", confirm: "允許", communityPicks: "社群精選",
-      posterPrompt: "開啟Conso查看完整內容", posterFooter: "前往 Conso，查看完整內容"
+      getApp: "下載App", openApp: "開啟Conso", openInApp: "App內開啟",
+      dialogTitle: "此功能需在Conso中使用", dialogDescription: "開啟Conso，體驗完整內容與功能。",
+      cancel: "取消", confirm: "允許", communityPicks: "社區精選",
+      posterPrompt: "開啟Conso查看完整內容", posterFooter: "前往Conso，查看完整內容"
     },
     ru: {
       getApp: "Скачать приложение", openApp: "Открыть Conso", openInApp: "Открыть в приложении",
-      dialogTitle: "Эта функция доступна в Conso", dialogDescription: "Откройте Conso, чтобы получить полный доступ к контенту и функциям.",
-      cancel: "Отмена", confirm: "Открыть", communityPicks: "Выбор сообщества",
+      dialogTitle: "Эта функция доступна только в Conso", dialogDescription: "Откройте Conso, чтобы получить полный опыт использования.",
+      cancel: "Отмена", confirm: "Разрешить", communityPicks: "Выбор сообщества",
       posterPrompt: "Откройте Conso, чтобы увидеть полный контент", posterFooter: "Откройте Conso, чтобы увидеть полный контент"
     },
     ar: {
-      getApp: "احصل على التطبيق", openApp: "افتح Conso", openInApp: "افتح في التطبيق",
-      dialogTitle: "هذه الميزة متاحة في Conso", dialogDescription: "افتح Conso للوصول إلى المحتوى والميزات الكاملة.",
-      cancel: "إلغاء", confirm: "فتح", communityPicks: "اختيارات المجتمع",
+      getApp: "تحميل التطبيق", openApp: "فتح Conso", openInApp: "فتح في التطبيق",
+      dialogTitle: "هذه الميزة متاحة فقط في Conso", dialogDescription: "افتح Conso للاستمتاع بالتجربة الكاملة.",
+      cancel: "إلغاء", confirm: "السماح", communityPicks: "مختارات المجتمع",
       posterPrompt: "افتح Conso لعرض المحتوى الكامل", posterFooter: "افتح Conso لعرض المحتوى الكامل"
     }
   };
