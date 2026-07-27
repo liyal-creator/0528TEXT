@@ -1,0 +1,1209 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#F2F3F5">
+  <title>Fake Post, Real Trades</title>
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const value = (params.get("language") || params.get("lang") || "en").toLowerCase();
+      const titles = {
+        en: "Fake Post, Real Trades",
+        zhHans: "假消息，真交易",
+        zhHant: "假消息，真交易",
+        ru: "Фейковый пост, реальные сделки",
+        ar: "منشور مزيف، صفقات حقيقية"
+      };
+      const simplified = ["zh-hans-raw", "zh-cn", "zhcn", "zhhans", "zh-hans"];
+      const traditional = ["zh", "zh-hant-raw", "zh-hant", "zhhant", "zh-tw", "zhtw", "zh-hk", "zhhk"];
+      let language = "en";
+
+      if (simplified.indexOf(value) > -1) {
+        language = "zhHans";
+      } else if (traditional.indexOf(value) > -1) {
+        language = "zhHant";
+      } else if (["ru", "ar", "en"].indexOf(value) > -1) {
+        language = value;
+      }
+
+      document.title = titles[language];
+    })();
+  </script>
+  <style>
+    :root {
+      --primary: #44D564;
+      --primary-light: #E8F3FF;
+      --success: #00B42A;
+      --warning: #FF7D00;
+      --danger: #F53F3F;
+      --text-primary: #1D2129;
+      --text-secondary: #4E5969;
+      --text-tertiary: #86909C;
+      --border: #C9CDD4;
+      --bg-page: #F2F3F5;
+      --bg-white: #FFFFFF;
+      --primary-on: #FFFFFF;
+      --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
+      --shadow-nav: 0 1px 4px rgba(0, 0, 0, 0.05);
+      --overlay-soft: rgba(68, 213, 100, 0.10);
+      --bg-ending: #69E3B1;
+      --font-h1: 24px;
+      --font-h2: 20px;
+      --font-h3: 18px;
+      --font-body: 16px;
+      --font-caption: 14px;
+      --font-small: 12px;
+      --space-4: 4px;
+      --space-8: 8px;
+      --space-16: 16px;
+      --space-24: 24px;
+      --space-32: 32px;
+    }
+
+    :root[data-theme="dark"] {
+      --text-primary: #F2F3F5;
+      --text-secondary: #C9CDD4;
+      --text-tertiary: #86909C;
+      --border: #4E5969;
+      --bg-page: #141414;
+      --bg-white: #1D2129;
+      --primary-on: #102A16;
+      --primary-light: #233A2A;
+      --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.24);
+      --shadow-nav: 0 1px 4px rgba(0, 0, 0, 0.20);
+      --overlay-soft: rgba(68, 213, 100, 0.14);
+      --bg-ending: #233A2A;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+      background: var(--bg-page);
+      color-scheme: light;
+    }
+
+    html[data-theme="dark"] {
+      color-scheme: dark;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg-page);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      font-size: var(--font-body);
+      font-weight: 400;
+      line-height: 24px;
+      -webkit-font-smoothing: antialiased;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      overscroll-behavior-y: contain;
+    }
+
+    html[dir="rtl"] body {
+      direction: rtl;
+      text-align: right;
+    }
+
+    html[dir="rtl"] .callout-warning,
+    html[dir="rtl"] .outcome-item {
+      border-right: 4px solid var(--primary);
+      border-left: 0;
+    }
+
+    html[dir="rtl"] .guess-option,
+    html[dir="rtl"] .page-footer {
+      text-align: right;
+    }
+
+    html[dir="rtl"] .timeline-time,
+    html[dir="rtl"] .number-value {
+      direction: ltr;
+      unicode-bidi: isolate;
+    }
+
+    input,
+    textarea {
+      -webkit-user-select: text;
+      user-select: text;
+      -webkit-touch-callout: default;
+    }
+
+    .page-article {
+      width: 100%;
+      max-width: 768px;
+      margin: 0 auto;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .section-hero,
+    .section-content,
+    .section-final,
+    .page-footer {
+      margin: var(--space-16);
+    }
+
+    .section-hero {
+      padding: var(--space-24) var(--space-16);
+      background: var(--bg-white);
+      border-radius: 12px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .tag-default {
+      display: inline-flex;
+      align-items: center;
+      height: 24px;
+      padding: 0 var(--space-8);
+      color: var(--primary);
+      background: var(--primary-light);
+      border-radius: 4px;
+      font-size: var(--font-small);
+      font-weight: 400;
+      line-height: 16px;
+    }
+
+    .hero-title {
+      margin: var(--space-16) 0 var(--space-8);
+      color: var(--text-primary);
+      font-size: var(--font-h1);
+      font-weight: 600;
+      line-height: 32px;
+    }
+
+    .hero-summary {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: var(--font-body);
+      font-weight: 400;
+      line-height: 24px;
+    }
+
+    .card-default {
+      padding: var(--space-16);
+      background: var(--bg-white);
+      border-radius: 12px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .post-header {
+      display: flex;
+      align-items: center;
+      min-height: 56px;
+      padding-bottom: var(--space-8);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .post-avatar {
+      display: flex;
+      flex: 0 0 40px;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      margin-right: var(--space-8);
+      color: var(--primary-on);
+      background: var(--primary);
+      border-radius: 20px;
+      font-size: var(--font-caption);
+      font-weight: 600;
+      line-height: 20px;
+    }
+
+    .post-name {
+      color: var(--text-primary);
+      font-size: var(--font-body);
+      font-weight: 600;
+      line-height: 24px;
+    }
+
+    .post-handle {
+      display: block;
+      color: var(--text-tertiary);
+      font-size: var(--font-caption);
+      font-weight: 400;
+      line-height: 20px;
+    }
+
+    .post-badge {
+      margin-left: auto;
+      color: var(--danger);
+      background: var(--bg-page);
+    }
+
+    .post-copy {
+      margin: var(--space-16) 0;
+      color: var(--text-secondary);
+      font-size: var(--font-body);
+      font-weight: 400;
+      line-height: 24px;
+    }
+
+    .contract-address {
+      overflow: hidden;
+      padding: var(--space-8) var(--space-16);
+      color: var(--primary);
+      background: var(--primary-light);
+      border-radius: 4px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: var(--font-caption);
+      line-height: 20px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .post-foot {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-8) var(--space-16);
+      margin-top: var(--space-16);
+      color: var(--text-tertiary);
+      font-size: var(--font-caption);
+      line-height: 20px;
+    }
+
+    .source-shot {
+      overflow: hidden;
+    }
+
+    .source-shot-link {
+      display: block;
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .source-shot-image {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: var(--bg-page);
+      border-radius: 12px;
+    }
+
+    .source-shot-caption {
+      margin-top: var(--space-8);
+      color: var(--text-tertiary);
+      font-size: var(--font-caption);
+      font-weight: 400;
+      line-height: 20px;
+    }
+
+    .section-content {
+      padding: var(--space-16);
+      background: var(--bg-white);
+      border-radius: 12px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .section-index {
+      margin: 0 0 var(--space-4);
+      color: var(--primary);
+      font-size: var(--font-caption);
+      font-weight: 500;
+      line-height: 20px;
+    }
+
+    .section-title {
+      margin: 0 0 var(--space-16);
+      color: var(--text-primary);
+      font-size: var(--font-h2);
+      font-weight: 600;
+      line-height: 28px;
+    }
+
+    .timeline-list,
+    .danmaku-stage,
+    .number-grid,
+    .outcome-list,
+    .loop-list {
+      display: grid;
+      gap: var(--space-8);
+    }
+
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: var(--space-8);
+      min-height: 56px;
+      padding: var(--space-8) 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .timeline-item:last-child {
+      border-bottom: 0;
+    }
+
+    .timeline-time {
+      color: var(--primary);
+      font-size: var(--font-body);
+      font-weight: 600;
+      line-height: 24px;
+    }
+
+    .timeline-copy,
+    .outcome-copy,
+    .note-copy,
+    .insight-copy,
+    .status-copy {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: var(--font-caption);
+      font-weight: 400;
+      line-height: 20px;
+    }
+
+    .timeline-copy small {
+      display: block;
+      margin-top: var(--space-4);
+      color: var(--text-tertiary);
+      font-size: var(--font-small);
+      line-height: 16px;
+    }
+
+    .callout-warning {
+      margin-top: var(--space-16);
+      padding: var(--space-16);
+      color: var(--text-secondary);
+      background: var(--bg-page);
+      border-left: 4px solid var(--primary);
+      font-size: var(--font-caption);
+      line-height: 20px;
+    }
+
+    .callout-warning strong {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .danmaku-stage {
+      overflow: hidden;
+      padding: var(--space-16) var(--space-8);
+      background: var(--overlay-soft);
+      border-radius: 12px;
+      row-gap: 20px;
+    }
+
+    .danmaku-row {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-4);
+      width: 100%;
+      padding: 0 var(--space-4) 0 var(--space-4);
+    }
+
+    .danmaku-row:nth-child(odd) {
+      align-items: flex-start;
+      padding-right: 28px;
+    }
+
+    .danmaku-row:nth-child(even) {
+      align-items: flex-end;
+      padding-left: 28px;
+    }
+
+    .danmaku-bubble {
+      display: block;
+      max-width: 100%;
+      padding: 12px var(--space-16);
+      color: var(--text-primary);
+      background: var(--bg-white);
+      border-radius: 12px;
+      box-shadow: var(--shadow-card);
+      font-size: var(--font-caption);
+      font-weight: 500;
+      line-height: 20px;
+      overflow-wrap: anywhere;
+    }
+
+    .danmaku-row:nth-child(odd) .danmaku-bubble,
+    .danmaku-row:nth-child(odd) .danmaku-label {
+      color: var(--primary-on);
+      background: var(--primary);
+    }
+
+    .danmaku-label {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      margin: 0 var(--space-8);
+      padding: var(--space-4) var(--space-8);
+      color: var(--text-tertiary);
+      background: var(--bg-white);
+      border-radius: 4px;
+      font-size: var(--font-small);
+      line-height: 16px;
+    }
+
+    .note-copy {
+      margin-top: var(--space-16);
+      color: var(--text-tertiary);
+    }
+
+    .number-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .number-item {
+      min-height: 96px;
+      padding: var(--space-16);
+      background: var(--bg-page);
+      border-radius: 12px;
+    }
+
+    .number-value {
+      display: block;
+      color: var(--primary);
+      font-size: var(--font-h3);
+      font-weight: 600;
+      line-height: 24px;
+    }
+
+    .number-label {
+      display: block;
+      margin-top: var(--space-8);
+      color: var(--text-secondary);
+      font-size: var(--font-caption);
+      line-height: 20px;
+    }
+
+    .insight-card {
+      padding: var(--space-16);
+      color: var(--text-primary);
+      background: var(--bg-page);
+      border-radius: 12px;
+    }
+
+    .insight-title {
+      margin: 0 0 var(--space-8);
+      color: var(--primary);
+      font-size: var(--font-h3);
+      font-weight: 500;
+      line-height: 24px;
+    }
+
+    .loop-list {
+      margin-top: var(--space-16);
+    }
+
+    .loop-item {
+      display: grid;
+      grid-template-columns: 24px 1fr;
+      gap: var(--space-8);
+      align-items: center;
+      min-height: 40px;
+    }
+
+    .loop-number {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      color: var(--primary-on);
+      background: var(--primary);
+      border-radius: 12px;
+      font-size: var(--font-small);
+      font-weight: 600;
+      line-height: 16px;
+    }
+
+    .loop-copy {
+      color: var(--text-secondary);
+      font-size: var(--font-caption);
+      font-weight: 500;
+      line-height: 20px;
+    }
+
+    .outcome-item {
+      padding: var(--space-16);
+      background: var(--bg-page);
+      border-left: 4px solid var(--primary);
+    }
+
+    .outcome-title {
+      display: block;
+      margin-bottom: var(--space-4);
+      color: var(--text-primary);
+      font-size: var(--font-caption);
+      font-weight: 600;
+      line-height: 20px;
+    }
+
+    .guess-card {
+      margin-top: var(--space-16);
+      padding: var(--space-16);
+      background: var(--bg-page);
+      border-radius: 12px;
+    }
+
+    .guess-title {
+      margin: 0 0 var(--space-4);
+      color: var(--primary);
+      font-size: var(--font-h3);
+      font-weight: 600;
+      line-height: 24px;
+    }
+
+    .guess-copy {
+      margin: 0 0 var(--space-16);
+      color: var(--text-secondary);
+      font-size: var(--font-caption);
+      line-height: 20px;
+    }
+
+    .guess-options {
+      display: grid;
+      gap: var(--space-8);
+    }
+
+    .guess-option {
+      width: 100%;
+      min-height: 48px;
+      padding: 0 var(--space-24);
+      color: var(--text-primary);
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: 80px;
+      font-family: inherit;
+      font-size: var(--font-caption);
+      font-weight: 500;
+      line-height: 20px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .guess-option:active {
+      transform: scale(0.98);
+    }
+
+    .guess-option.is-selected {
+      color: var(--primary-on);
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .guess-result {
+      margin: var(--space-16) 0 0;
+      color: var(--primary);
+      font-size: var(--font-caption);
+      font-weight: 600;
+      line-height: 20px;
+    }
+
+    .section-final {
+      padding: var(--space-24) var(--space-16);
+      background: var(--bg-ending);
+      border-radius: 12px;
+      box-shadow: var(--shadow-card);
+      text-align: center;
+    }
+
+    .final-title {
+      margin: 0 0 var(--space-8);
+      color: var(--text-primary);
+      font-size: var(--font-h2);
+      font-weight: 600;
+      line-height: 28px;
+    }
+
+    .status-card {
+      padding: 0;
+      background: transparent;
+    }
+
+    .section-final .status-copy {
+      color: var(--text-primary);
+      text-align: center;
+    }
+
+    .page-footer {
+      padding: var(--space-16);
+      color: var(--text-tertiary);
+      font-size: var(--font-caption);
+      line-height: 20px;
+      text-align: left;
+    }
+
+    @media (min-width: 768px) {
+      .section-hero,
+      .section-content,
+      .section-final,
+      .page-footer {
+        margin-right: var(--space-24);
+        margin-left: var(--space-24);
+      }
+
+      .guess-options {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <main class="page-article">
+    <header class="section-hero">
+      <span class="tag-default" data-i18n="heroTag">Onchain incident</span>
+      <h1 class="hero-title" data-i18n="heroTitle">Everyone knew it was a hack, then bought anyway.</h1>
+      <p class="hero-summary" data-i18n="heroSummary">Robinhood CEO Vlad Tenev’s X account suddenly announced the $VLAD meme coin. The comments said “hacked”; the chain asked for the contract address.</p>
+    </header>
+
+    <figure class="section-content source-shot">
+      <div class="source-shot-link">
+        <img
+          class="source-shot-image"
+          id="source-shot-image"
+          src="https://cdn.sanity.io/images/s3y3vcno/production/6e7d99bc94ba1eaf1642586d86e3e2232970270a-944x1770.png?auto=format"
+          data-fallback-src="https://assets.beincrypto.com/img/33ZDarl0XSxnQRol2basT2wNx2Y%3D/smart/ef799bff78dc4ee083adad076eea162a"
+          alt="Screenshot of the deleted Vladhood post from Vlad Tenev's compromised X account"
+          loading="eager"
+          decoding="async"
+          referrerpolicy="no-referrer">
+      </div>
+      <figcaption class="source-shot-caption" data-i18n="shotCaption">The original post has been deleted. Screenshot: CoinDesk / X.</figcaption>
+    </figure>
+
+    <section class="section-content">
+      <p class="section-index" data-i18n="s1Index">01 / How it unfolded</p>
+      <h2 class="section-title" data-i18n="s1Title">The token was ready before the account spoke.</h2>
+      <div class="timeline-list">
+        <div class="timeline-item"><span class="timeline-time">12:38</span><p class="timeline-copy"><span data-i18n="timeline1">$VLAD was deployed on Robinhood Chain.</span><small data-i18n="timezone">U.S. Eastern Time</small></p></div>
+        <div class="timeline-item"><span class="timeline-time">13:24</span><p class="timeline-copy" data-i18n="timeline2">The CEO account posted an “official meme coin” announcement and contract address.</p></div>
+        <div class="timeline-item"><span class="timeline-time" data-i18n="timelineOffset7">+7 min</span><p class="timeline-copy" data-i18n="timeline3">The creator wallet began collecting trading fees.</p></div>
+        <div class="timeline-item"><span class="timeline-time" data-i18n="timelineOffset41">+41 min</span><p class="timeline-copy" data-i18n="timeline4">Robinhood confirmed the compromise; the fake post was removed.</p></div>
+      </div>
+      <div class="callout-warning"><strong data-i18n="contrastLabel">The contrast:</strong> <span data-i18n="contrastCopy">the company needed about 41 minutes to detect, confirm, and clarify; onchain attention turned into fees in only seven.</span></div>
+    </section>
+
+    <section class="section-content">
+      <p class="section-index" data-i18n="s2Index">02 / The community moved faster than the plot</p>
+      <h2 class="section-title" data-i18n="s2Title">Few truly believed it, but many believed someone else would buy.</h2>
+      <div class="danmaku-stage" id="danmaku-stage" aria-label="Community comments">
+        <div class="danmaku-row"><span class="danmaku-label" data-i18n="quoteLabel1">First-glance skeptics</span><div class="danmaku-bubble"><span data-i18n="quote1">“It looks 99% hacked. The timing is too convenient.”</span></div></div>
+        <div class="danmaku-row"><span class="danmaku-label" data-i18n="quoteLabel2">Speculation desk</span><div class="danmaku-bubble"><span data-i18n="quote2">“If a hacker posts a wallet contract, wouldn’t it fly?”</span></div></div>
+        <div class="danmaku-row"><span class="danmaku-label" data-i18n="quoteLabel3">Still trading</span><div class="danmaku-bubble"><span data-i18n="quote3">“I would add in batches. If the narrative survives, someone keeps waiting for the next low.”</span></div></div>
+        <div class="danmaku-row"><span class="danmaku-label" data-i18n="quoteLabel4">Volatility watchers</span><div class="danmaku-bubble"><span data-i18n="quote4">“Make enough noise and you can scare the price lower.”</span></div></div>
+        <div class="danmaku-row"><span class="danmaku-label" data-i18n="quoteLabel5">Response critics</span><div class="danmaku-bubble"><span data-i18n="quote5">“The clarification took over 40 minutes. Onchain, that is several cycles.”</span></div></div>
+        <div class="danmaku-row"><span class="danmaku-label" data-i18n="quoteLabel6">Onchain philosophers</span><div class="danmaku-bubble"><span data-i18n="quote6">“The account is back, but the coin still trades. That is the Web3 ending.”</span></div></div>
+      </div>
+      <p class="note-copy" data-i18n="quoteNote">Comments are anonymized adaptations of public community discussion. They do not represent the platform and are not trading advice.</p>
+    </section>
+
+    <section class="section-content">
+      <p class="section-index" data-i18n="s3Index">03 / The numbers</p>
+      <h2 class="section-title" data-i18n="s3Title">A fake post can be deleted. Trades cannot be automatically reversed.</h2>
+      <div class="number-grid">
+        <div class="number-item"><span class="number-value" data-i18n="number1Value">46 min</span><span class="number-label" data-i18n="number1Label">Token deployment preceded the fake post</span></div>
+        <div class="number-item"><span class="number-value">175K+</span><span class="number-label" data-i18n="number2Label">Views in under 20 minutes</span></div>
+        <div class="number-item"><span class="number-value">$22M+</span><span class="number-label" data-i18n="number3Label">Main-pool volume in the following hours</span></div>
+        <div class="number-item"><span class="number-value">85K</span><span class="number-label" data-i18n="number4Label">Approximate swaps in the following hours</span></div>
+      </div>
+      <p class="note-copy" data-i18n="numbersNote">Figures come from media and onchain snapshots after the incident and may change. Volume is neither attacker profit nor users’ net loss.</p>
+    </section>
+
+    <section class="section-content">
+      <p class="section-index" data-i18n="s4Index">04 / What really matters</p>
+      <h2 class="section-title" data-i18n="s4Title">In meme markets, doubt can become liquidity.</h2>
+      <div class="insight-card">
+        <h3 class="insight-title" data-i18n="insightTitle">Disbelief does not mean inaction</h3>
+        <p class="insight-copy" data-i18n="insightCopy">Some people did not believe Robinhood issued a coin. They believed the fake story would attract the next buyer. The trade was no longer about fundamentals, but about predicting other people’s next move.</p>
+        <div class="loop-list">
+          <div class="loop-item"><span class="loop-number">1</span><span class="loop-copy" data-i18n="loop1">Someone flags the suspicious post</span></div>
+          <div class="loop-item"><span class="loop-number">2</span><span class="loop-copy" data-i18n="loop2">Warnings spread and increase exposure</span></div>
+          <div class="loop-item"><span class="loop-number">3</span><span class="loop-copy" data-i18n="loop3">Spectators enter and volatility creates screenshots</span></div>
+          <div class="loop-item"><span class="loop-number">4</span><span class="loop-copy" data-i18n="loop4">New screenshots fuel debate and more trading</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-content">
+      <p class="section-index" data-i18n="s5Index">05 / How this could end</p>
+      <h2 class="section-title" data-i18n="s5Title">The account is back, but the story is not closed.</h2>
+      <div class="outcome-list">
+        <div class="outcome-item"><strong class="outcome-title" data-i18n="outcome1Title">A: It remains an account-security incident</strong><p class="outcome-copy" data-i18n="outcome1Copy">X explains the intrusion, Robinhood hardens executive accounts, and the event closes with a security notice.</p></div>
+        <div class="outcome-item"><strong class="outcome-title" data-i18n="outcome2Title">B: It becomes an ecosystem-risk response</strong><p class="outcome-copy" data-i18n="outcome2Copy">Robinhood keeps risk warnings in wallets, browsers, or trading surfaces and explains whether affected users receive support.</p></div>
+        <div class="outcome-item"><strong class="outcome-title" data-i18n="outcome3Title">C: Officials leave; the community keeps trading</strong><p class="outcome-copy" data-i18n="outcome3Copy">The coin fully separates from Robinhood but is “community-taken-over,” turning the hack itself into a new meme narrative.</p></div>
+      </div>
+      <div class="guess-card">
+        <h3 class="guess-title" data-i18n="guessTitle">Take a guess 👀</h3>
+        <p class="guess-copy" data-i18n="guessCopy">Where does this episode end? Pick one and leave your prediction here.</p>
+        <div class="guess-options">
+          <button class="guess-option" type="button" data-choice="A" data-i18n="guessA">A | Security notice</button>
+          <button class="guess-option" type="button" data-choice="B" data-i18n="guessB">B | Risk response</button>
+          <button class="guess-option" type="button" data-choice="C" data-i18n="guessC">C | Community keeps memeing</button>
+          <button class="guess-option" type="button" data-choice="D" data-i18n="guessD">D | Wait, I have another idea</button>
+        </div>
+        <p class="guess-result" id="guess-result" data-i18n="guessResult" aria-live="polite" hidden>Prediction received. Come back when the story closes and check your answer ✨</p>
+      </div>
+    </section>
+
+    <section class="section-final">
+      <h2 class="final-title" data-i18n="finalTitle">A meme does not need everyone to believe the story. It only needs enough people to believe someone else will act.</h2>
+      <div class="status-card"><p class="status-copy" data-i18n="statusCopy">As of 2026-07-24 02:42:28 UTC: Vlad Tenev said his account had been restored and that he was awaiting an explanation from X. Robinhood again confirmed it had issued no coin or token. The full investigation and follow-up response have not been published.</p></div>
+    </section>
+
+    <footer class="page-footer" data-i18n="footer">This article discusses an incident and market behavior only. It is not investment advice. Meme coins are highly volatile and onchain trades are irreversible; independently verify contracts and sources.</footer>
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+
+      const copy = {
+        en: {
+          pageTitle: "Fake Post, Real Trades",
+          heroTag: "Onchain incident",
+          heroTitle: "Everyone knew it was a hack, then bought anyway.",
+          heroSummary: "Robinhood CEO Vlad Tenev’s X account suddenly announced the $VLAD meme coin. The comments said “hacked”; the chain asked for the contract address.",
+          shotCaption: "The original post has been deleted. Screenshot: CoinDesk / X.",
+          imageAlt: "Screenshot of the deleted Vladhood post from Vlad Tenev's compromised X account",
+          danmakuAria: "Community comments",
+          postHandle: "@vladtenev · during the compromise",
+          fakeTag: "FAKE",
+          postCopy: "“Does Robinhood love memes? The answer is yes.” The post announced Vladhood ($VLAD), called it the official mascot of Robinhood Chain, and claimed it would list in the Robinhood app.",
+          postFoot1: "Within minutes: the internet spots the hack",
+          postFoot2: "At the same time: traders buy onchain",
+          s1Index: "01 / How it unfolded",
+          s1Title: "The token was ready before the account spoke.",
+          timeline1: "$VLAD was deployed on Robinhood Chain.",
+          timezone: "U.S. Eastern Time",
+          timeline2: "The CEO account posted an “official meme coin” announcement and contract address.",
+          timelineOffset7: "+7 min",
+          timeline3: "The creator wallet began collecting trading fees.",
+          timelineOffset41: "+41 min",
+          timeline4: "Robinhood confirmed the compromise; the fake post was removed.",
+          contrastLabel: "The contrast:",
+          contrastCopy: "the company needed about 41 minutes to detect, confirm, and clarify; onchain attention turned into fees in only seven.",
+          s2Index: "02 / The community moved faster than the plot",
+          s2Title: "Few truly believed it, but many believed someone else would buy.",
+          quote1: "“It looks 99% hacked. The timing is too convenient.”",
+          quoteLabel1: "First-glance skeptics",
+          quote2: "“If a hacker posts a wallet contract, wouldn’t it fly?”",
+          quoteLabel2: "Speculation desk",
+          quote3: "“I would add in batches. If the narrative survives, someone keeps waiting for the next low.”",
+          quoteLabel3: "Still trading",
+          quote4: "“Make enough noise and you can scare the price lower.”",
+          quoteLabel4: "Volatility watchers",
+          quote5: "“The clarification took over 40 minutes. Onchain, that is several cycles.”",
+          quoteLabel5: "Response critics",
+          quote6: "“The account is back, but the coin still trades. That is the Web3 ending.”",
+          quoteLabel6: "Onchain philosophers",
+          quoteNote: "Comments are anonymized adaptations of public community discussion. They do not represent the platform and are not trading advice.",
+          s3Index: "03 / The numbers",
+          s3Title: "A fake post can be deleted. Trades cannot be automatically reversed.",
+          number1Value: "46 min",
+          number1Label: "Token deployment preceded the fake post",
+          number2Label: "Views in under 20 minutes",
+          number3Label: "Main-pool volume in the following hours",
+          number4Label: "Approximate swaps in the following hours",
+          numbersNote: "Figures come from media and onchain snapshots after the incident and may change. Volume is neither attacker profit nor users’ net loss.",
+          s4Index: "04 / What really matters",
+          s4Title: "In meme markets, doubt can become liquidity.",
+          insightTitle: "Disbelief does not mean inaction",
+          insightCopy: "Some people did not believe Robinhood issued a coin. They believed the fake story would attract the next buyer. The trade was no longer about fundamentals, but about predicting other people’s next move.",
+          loop1: "Someone flags the suspicious post",
+          loop2: "Warnings spread and increase exposure",
+          loop3: "Spectators enter and volatility creates screenshots",
+          loop4: "New screenshots fuel debate and more trading",
+          s5Index: "05 / How this could end",
+          s5Title: "The account is back, but the story is not closed.",
+          outcome1Title: "A: It remains an account-security incident",
+          outcome1Copy: "X explains the intrusion, Robinhood hardens executive accounts, and the event closes with a security notice.",
+          outcome2Title: "B: It becomes an ecosystem-risk response",
+          outcome2Copy: "Robinhood keeps risk warnings in wallets, browsers, or trading surfaces and explains whether affected users receive support.",
+          outcome3Title: "C: Officials leave; the community keeps trading",
+          outcome3Copy: "The coin fully separates from Robinhood but is “community-taken-over,” turning the hack itself into a new meme narrative.",
+          guessTitle: "Take a guess 👀",
+          guessCopy: "Where does this episode end? Pick one and leave your prediction here.",
+          guessA: "A | Security notice",
+          guessB: "B | Risk response",
+          guessC: "C | Community keeps memeing",
+          guessD: "D | Wait, I have another idea",
+          guessResult: "Prediction received. Come back when the story closes and check your answer ✨",
+          finalTitle: "A meme does not need everyone to believe the story. It only needs enough people to believe someone else will act.",
+          statusCopy: "As of 2026-07-24 02:42:28 UTC: Vlad Tenev said his account had been restored and that he was awaiting an explanation from X. Robinhood again confirmed it had issued no coin or token. The full investigation and follow-up response have not been published.",
+          footer: "This article discusses an incident and market behavior only. It is not investment advice. Meme coins are highly volatile and onchain trades are irreversible; independently verify contracts and sources."
+        },
+        zhHans: {
+          pageTitle: "假消息，真交易",
+          heroTag: "链上安全事件",
+          heroTitle: "大家都猜到是盗号了，然后还是买了。",
+          heroSummary: "Robinhood CEO Vlad Tenev 的 X 账号突然官宣 Meme 币 $VLAD。评论区第一反应是“像盗号”，链上第一反应却是“合约地址呢？”",
+          shotCaption: "原帖已删除；截图来源：CoinDesk / X。",
+          imageAlt: "Vlad Tenev 被盗 X 账号中现已删除的 Vladhood 帖子截图",
+          danmakuAria: "社区弹幕",
+          postHandle: "@vladtenev · 账号遭入侵时",
+          fakeTag: "虚假",
+          postCopy: "“Robinhood 喜欢 Meme 吗？答案是肯定的。”帖子宣布推出 Vladhood（$VLAD），称它是 Robinhood Chain 的“官方吉祥物”，并声称会在 Robinhood App 上架。",
+          postFoot1: "十几分钟：全网鉴盗",
+          postFoot2: "与此同时：链上开冲",
+          s1Index: "01 / 事情是怎么滚起来的",
+          s1Title: "代币先准备好，账号随后开麦。",
+          timeline1: "$VLAD 在 Robinhood Chain 上部署。",
+          timezone: "美国东部时间",
+          timeline2: "CEO 账号发出“官方 Meme 币”公告，并贴出合约地址。",
+          timelineOffset7: "+7 分钟",
+          timeline3: "创建者钱包开始领取交易手续费。",
+          timelineOffset41: "+41 分钟",
+          timeline4: "Robinhood 官方确认账号被盗，虚假帖子随后删除。",
+          contrastLabel: "关键反差：",
+          contrastCopy: "公司花了约 41 分钟完成发现、确认与澄清；链上只用了 7 分钟，就开始把注意力变成手续费。",
+          s2Index: "02 / 社区弹幕，比剧情还快",
+          s2Title: "没有多少人真信，但很多人相信“别人会买”。",
+          quote1: "“99% 像盗号，时间点也太巧了。”",
+          quoteLabel1: "第一眼鉴盗组",
+          quote2: "“黑客要是发的是钱包合约，这不得直接上天？”",
+          quoteLabel2: "脑洞继续组",
+          quote3: "“加仓会分批，但如果叙事没死，就有人一直等新低。”",
+          quoteLabel3: "仍然行动组",
+          quote4: "“声音大点，都能把它吓得往下掉。”",
+          quoteLabel4: "波动观察组",
+          quote5: "“官方澄清慢了四十多分钟，这在链上已经够跑好几轮。”",
+          quoteLabel5: "追问处置组",
+          quote6: "“账号拿回来了，币却还在交易——这才是 Web3 的结尾。”",
+          quoteLabel6: "吃瓜哲学组",
+          quoteNote: "弹幕为公开社区讨论的匿名摘编与意译；不代表平台观点，也不构成交易建议。",
+          s3Index: "03 / 几个数字",
+          s3Title: "假帖删得掉，成交不会自动撤回。",
+          number1Value: "46 分钟",
+          number1Label: "代币部署领先于假帖发布",
+          number2Label: "假帖不到 20 分钟的浏览量",
+          number3Label: "事发后数小时主池交易量",
+          number4Label: "事发后数小时的 Swap 量级",
+          numbersNote: "数据来自事发后媒体与链上快照，市场数据会持续变化；交易量不等于攻击者收益，也不等于用户净损失。",
+          s4Index: "04 / 真正有意思的地方",
+          s4Title: "在 Meme 市场，质疑也可能是一种流动性。",
+          insightTitle: "“不相信”不等于“不行动”",
+          insightCopy: "有人并不相信 Robinhood 真发了币，却相信这条假消息会吸引下一批买家。交易对象不再是项目基本面，而是其他人接下来会如何反应。",
+          loop1: "有人发现可疑，发帖预警",
+          loop2: "预警被转发，曝光继续扩大",
+          loop3: "围观者入场，波动制造截图",
+          loop4: "新截图引发争论，成交继续",
+          s5Index: "05 / 官方会怎么收场",
+          s5Title: "账号回来了，但故事还没正式结案。",
+          outcome1Title: "走向 A：停在“账号安全事故”",
+          outcome1Copy: "X 给出入侵原因，Robinhood 加固高管账号，事件以一份安全说明结束。",
+          outcome2Title: "走向 B：升级成“生态风险处置”",
+          outcome2Copy: "Robinhood 在钱包、浏览器或交易入口持续标注风险，并说明是否会对受影响用户采取措施。",
+          outcome3Title: "走向 C：官方退场，社区继续玩币",
+          outcome3Copy: "项目与 Robinhood 彻底切割，但代币被“社区接管”，盗号事件本身反而成为新的 Meme 叙事。",
+          guessTitle: "您来猜个 👀",
+          guessCopy: "这出戏最后会停在哪一集？点一个，先把预测押在这里。",
+          guessA: "A｜安全事故收尾",
+          guessB: "B｜升级风险处置",
+          guessC: "C｜社区继续玩梗",
+          guessD: "D｜等等，我有其他想法",
+          guessResult: "收到您的预测啦。等故事结案，再回来对答案 ✨",
+          finalTitle: "Meme 不需要所有人相信故事。它只需要足够多人相信：别人会行动。",
+          statusCopy: "截至 2026-07-24 02:42:28 UTC：Vlad Tenev 已称账号恢复，正在等待 X 说明原因；Robinhood 再次确认没有发行任何币或代币。完整调查与后续处置尚未公开。",
+          footer: "本文仅用于事件信息与市场现象讨论，不构成投资建议。Meme 币波动剧烈，链上交易不可逆，请独立核验合约与信息来源。"
+        },
+        zhHant: {
+          pageTitle: "假消息，真交易",
+          heroTag: "鏈上安全事件",
+          heroTitle: "大家都猜到是盜號了，然後還是買了。",
+          heroSummary: "Robinhood CEO Vlad Tenev 的 X 帳號突然宣佈推出 Meme 幣 $VLAD。留言區第一反應是「像盜號」，鏈上第一反應卻是「合約地址呢？」",
+          shotCaption: "原帖已刪除；截圖來源：CoinDesk / X。",
+          imageAlt: "Vlad Tenev 被盜 X 帳號中現已刪除的 Vladhood 帖子截圖",
+          danmakuAria: "社群彈幕",
+          postHandle: "@vladtenev · 帳號遭入侵時",
+          fakeTag: "虛假",
+          postCopy: "「Robinhood 喜歡 Meme 嗎？答案是肯定的。」帖子宣佈推出 Vladhood（$VLAD），稱它是 Robinhood Chain 的「官方吉祥物」，並聲稱會在 Robinhood App 上架。",
+          postFoot1: "十幾分鐘：全網鑑盜",
+          postFoot2: "與此同時：鏈上開衝",
+          s1Index: "01 / 事情是怎麼滾起來的",
+          s1Title: "代幣先準備好，帳號隨後開麥。",
+          timeline1: "$VLAD 在 Robinhood Chain 上部署。",
+          timezone: "美國東部時間",
+          timeline2: "CEO 帳號發出「官方 Meme 幣」公告，並貼出合約地址。",
+          timelineOffset7: "+7 分鐘",
+          timeline3: "建立者錢包開始領取交易手續費。",
+          timelineOffset41: "+41 分鐘",
+          timeline4: "Robinhood 官方確認帳號被盜，虛假帖子隨後刪除。",
+          contrastLabel: "關鍵反差：",
+          contrastCopy: "公司花了約 41 分鐘完成發現、確認與澄清；鏈上只用了 7 分鐘，就開始把注意力變成手續費。",
+          s2Index: "02 / 社群彈幕，比劇情還快",
+          s2Title: "沒有多少人真信，但很多人相信「別人會買」。",
+          quote1: "「99% 像盜號，時間點也太巧了。」",
+          quoteLabel1: "第一眼鑑盜組",
+          quote2: "「駭客要是發的是錢包合約，這不得直接上天？」",
+          quoteLabel2: "腦洞繼續組",
+          quote3: "「加倉會分批，但如果敘事沒死，就有人一直等新低。」",
+          quoteLabel3: "仍然行動組",
+          quote4: "「聲音大點，都能把它嚇得往下掉。」",
+          quoteLabel4: "波動觀察組",
+          quote5: "「官方澄清慢了四十多分鐘，這在鏈上已經夠跑好幾輪。」",
+          quoteLabel5: "追問處置組",
+          quote6: "「帳號拿回來了，幣卻還在交易——這才是 Web3 的結尾。」",
+          quoteLabel6: "吃瓜哲學組",
+          quoteNote: "彈幕為公開社群討論的匿名摘編與意譯；不代表平台觀點，也不構成交易建議。",
+          s3Index: "03 / 幾個數字",
+          s3Title: "假帖刪得掉，成交不會自動撤回。",
+          number1Value: "46 分鐘",
+          number1Label: "代幣部署早於假帖發布",
+          number2Label: "假帖不到 20 分鐘的瀏覽量",
+          number3Label: "事發後數小時主池交易量",
+          number4Label: "事發後數小時的 Swap 量級",
+          numbersNote: "資料來自事發後媒體與鏈上快照，市場資料會持續變化；交易量不等於攻擊者收益，也不等於使用者淨損失。",
+          s4Index: "04 / 真正有意思的地方",
+          s4Title: "在 Meme 市場，質疑也可能是一種流動性。",
+          insightTitle: "「不相信」不等於「不行動」",
+          insightCopy: "有人並不相信 Robinhood 真發了幣，卻相信這條假消息會吸引下一批買家。交易對象不再是項目基本面，而是其他人接下來會如何反應。",
+          loop1: "有人發現可疑，發帖預警",
+          loop2: "預警被轉發，曝光繼續擴大",
+          loop3: "圍觀者入場，波動製造截圖",
+          loop4: "新截圖引發爭論，成交繼續",
+          s5Index: "05 / 官方會怎麼收場",
+          s5Title: "帳號回來了，但故事還沒正式結案。",
+          outcome1Title: "走向 A：停在「帳號安全事故」",
+          outcome1Copy: "X 給出入侵原因，Robinhood 加固高管帳號，事件以一份安全說明結束。",
+          outcome2Title: "走向 B：升級成「生態風險處置」",
+          outcome2Copy: "Robinhood 在錢包、瀏覽器或交易入口持續標註風險，並說明是否會對受影響使用者採取措施。",
+          outcome3Title: "走向 C：官方退場，社群繼續玩幣",
+          outcome3Copy: "項目與 Robinhood 徹底切割，但代幣被「社群接管」，盜號事件本身反而成為新的 Meme 敘事。",
+          guessTitle: "您來猜個 👀",
+          guessCopy: "這齣戲最後會停在哪一集？點一個，先把預測押在這裡。",
+          guessA: "A｜安全事故收尾",
+          guessB: "B｜升級風險處置",
+          guessC: "C｜社群繼續玩梗",
+          guessD: "D｜等等，我有其他想法",
+          guessResult: "收到您的預測啦。等故事結案，再回來對答案 ✨",
+          finalTitle: "Meme 不需要所有人相信故事。它只需要足夠多人相信：別人會行動。",
+          statusCopy: "截至 2026-07-24 02:42:28 UTC：Vlad Tenev 已表示帳號恢復，正在等待 X 說明原因；Robinhood 再次確認並未發行任何幣或代幣。完整調查與後續處置尚未公開。",
+          footer: "本文僅用於事件資訊與市場現象討論，不構成投資建議。Meme 幣波動劇烈，鏈上交易不可逆，請獨立核驗合約與資訊來源。"
+        },
+        ru: {
+          pageTitle: "Фейковый пост, реальные сделки",
+          heroTag: "Инцидент в блокчейне",
+          heroTitle: "Все поняли, что аккаунт взломан, — и всё равно купили.",
+          heroSummary: "В X-аккаунте главы Robinhood Влада Тенева внезапно объявили о мемкоине $VLAD. В комментариях сразу сказали «взлом», а в блокчейне спросили адрес контракта.",
+          shotCaption: "Исходный пост удалён. Скриншот: CoinDesk / X.",
+          imageAlt: "Скриншот удалённого поста о Vladhood из взломанного X-аккаунта Влада Тенева",
+          danmakuAria: "Комментарии сообщества",
+          postHandle: "@vladtenev · во время взлома",
+          fakeTag: "ФЕЙК",
+          postCopy: "«Любит ли Robinhood мемы? Ответ — да». В посте представили Vladhood ($VLAD), назвали его официальным талисманом Robinhood Chain и пообещали листинг в приложении Robinhood.",
+          postFoot1: "Через несколько минут: сеть замечает взлом",
+          postFoot2: "Одновременно: трейдеры покупают токен",
+          s1Index: "01 / Как всё развивалось",
+          s1Title: "Токен был готов раньше, чем заговорил аккаунт.",
+          timeline1: "$VLAD развернули в Robinhood Chain.",
+          timezone: "Восточное время США",
+          timeline2: "В аккаунте CEO появился анонс «официального мемкоина» с адресом контракта.",
+          timelineOffset7: "+7 мин",
+          timeline3: "Кошелёк создателя начал собирать торговые комиссии.",
+          timelineOffset41: "+41 мин",
+          timeline4: "Robinhood подтвердил взлом; фейковый пост удалили.",
+          contrastLabel: "Главный контраст:",
+          contrastCopy: "компании потребовалось около 41 минуты, чтобы обнаружить, подтвердить и разъяснить инцидент; в блокчейне внимание превратилось в комиссии всего за семь минут.",
+          s2Index: "02 / Сообщество быстрее сюжета",
+          s2Title: "Верили немногие, но многие верили, что купит кто-то другой.",
+          quote1: "«На 99% это взлом. Слишком уж удобный момент».",
+          quoteLabel1: "Скептики с первого взгляда",
+          quote2: "«Если хакер публикует адрес контракта, разве токен не взлетит?»",
+          quoteLabel2: "Отдел догадок",
+          quote3: "«Я бы докупал частями. Пока история жива, кто-то всё равно ждёт нового дна».",
+          quoteLabel3: "Всё ещё в сделке",
+          quote4: "«Поднимите шум — и цену можно напугать ещё ниже».",
+          quoteLabel4: "Наблюдатели за волатильностью",
+          quote5: "«Разъяснение заняло больше сорока минут. В блокчейне это уже несколько циклов».",
+          quoteLabel5: "Критики реакции",
+          quote6: "«Аккаунт вернули, а монета всё ещё торгуется. Вот такой финал Web3».",
+          quoteLabel6: "Философы блокчейна",
+          quoteNote: "Комментарии анонимно пересказаны по открытым обсуждениям сообщества. Они не отражают позицию платформы и не являются торговой рекомендацией.",
+          s3Index: "03 / Несколько цифр",
+          s3Title: "Фейковый пост можно удалить. Сделки автоматически не отменятся.",
+          number1Value: "46 минут",
+          number1Label: "Токен создали до публикации фейкового поста",
+          number2Label: "Просмотры менее чем за 20 минут",
+          number3Label: "Объём основного пула за следующие часы",
+          number4Label: "Примерное число свопов за следующие часы",
+          numbersNote: "Данные взяты из публикаций СМИ и снимков блокчейна после инцидента и могут меняться. Объём торгов — не прибыль атакующего и не чистый убыток пользователей.",
+          s4Index: "04 / Что здесь действительно важно",
+          s4Title: "На рынке мемов сомнение тоже может стать ликвидностью.",
+          insightTitle: "Не верить — не значит бездействовать",
+          insightCopy: "Некоторые не верили, что Robinhood выпустил монету, но верили, что фейк привлечёт следующего покупателя. Сделка была уже не о фундаментальных показателях, а о прогнозе чужой реакции.",
+          loop1: "Кто-то замечает подозрительный пост",
+          loop2: "Предупреждения расходятся и расширяют охват",
+          loop3: "Наблюдатели входят, а волатильность рождает скриншоты",
+          loop4: "Новые скриншоты подогревают спор и торговлю",
+          s5Index: "05 / Чем всё может закончиться",
+          s5Title: "Аккаунт вернулся, но история ещё не закрыта.",
+          outcome1Title: "A: Всё останется инцидентом безопасности",
+          outcome1Copy: "X объяснит причину взлома, Robinhood усилит защиту аккаунтов руководителей, а история завершится уведомлением о безопасности.",
+          outcome2Title: "B: Инцидент станет реакцией на риск экосистемы",
+          outcome2Copy: "Robinhood сохранит предупреждения в кошельках, браузерах или торговых интерфейсах и объяснит, будет ли помощь пострадавшим.",
+          outcome3Title: "C: Компания уйдёт, сообщество продолжит торговать",
+          outcome3Copy: "Токен полностью отделится от Robinhood, но перейдёт «под управление сообщества», а сам взлом станет новым мем-сюжетом.",
+          guessTitle: "Ваша версия? 👀",
+          guessCopy: "На какой серии всё закончится? Выберите вариант и оставьте прогноз.",
+          guessA: "A | Уведомление о безопасности",
+          guessB: "B | Реакция на риск",
+          guessC: "C | Сообщество продолжит мем",
+          guessD: "D | Подождите, у меня другая идея",
+          guessResult: "Прогноз принят. Вернитесь после развязки и проверьте себя ✨",
+          finalTitle: "Мему не нужно, чтобы в историю верили все. Достаточно, чтобы многие поверили: кто-то другой будет действовать.",
+          statusCopy: "По состоянию на 2026-07-24 02:42:28 UTC Влад Тенев сообщил, что аккаунт восстановлен и он ждёт объяснений от X. Robinhood вновь подтвердил, что не выпускал монет или токенов. Полное расследование и дальнейшие меры пока не опубликованы.",
+          footer: "Материал посвящён инциденту и поведению рынка и не является инвестиционной рекомендацией. Мемкоины крайне волатильны, а сделки в блокчейне необратимы; проверяйте контракты и источники самостоятельно."
+        },
+        ar: {
+          pageTitle: "منشور مزيف، صفقات حقيقية",
+          heroTag: "حادث أمني على السلسلة",
+          heroTitle: "عرف الجميع أن الحساب مخترق، ثم اشتروا رغم ذلك.",
+          heroSummary: "أعلن حساب فلاد تينيف، الرئيس التنفيذي لـ Robinhood، على X فجأة عن عملة الميم $VLAD. قالت التعليقات فوراً «اختراق»، بينما سأل المتداولون على السلسلة عن عنوان العقد.",
+          shotCaption: "حُذف المنشور الأصلي. لقطة الشاشة: CoinDesk / X.",
+          imageAlt: "لقطة للمنشور المحذوف عن Vladhood من حساب فلاد تينيف المخترق على X",
+          danmakuAria: "تعليقات المجتمع",
+          postHandle: "@vladtenev · أثناء الاختراق",
+          fakeTag: "مزيف",
+          postCopy: "«هل تحب Robinhood الميمات؟ الإجابة نعم». قدّم المنشور Vladhood ‏($VLAD) بوصفه التميمة الرسمية لـ Robinhood Chain، وزعم أنه سيُدرج في تطبيق Robinhood.",
+          postFoot1: "خلال دقائق: الإنترنت يكتشف الاختراق",
+          postFoot2: "وفي الوقت نفسه: المتداولون يشترون على السلسلة",
+          s1Index: "01 / كيف بدأت الحكاية",
+          s1Title: "كان الرمز جاهزاً قبل أن يتكلم الحساب.",
+          timeline1: "نُشر $VLAD على Robinhood Chain.",
+          timezone: "التوقيت الشرقي للولايات المتحدة",
+          timeline2: "نشر حساب الرئيس التنفيذي إعلان «عملة ميم رسمية» مع عنوان العقد.",
+          timelineOffset7: "+7 دقائق",
+          timeline3: "بدأت محفظة المنشئ بتحصيل رسوم التداول.",
+          timelineOffset41: "+41 دقيقة",
+          timeline4: "أكدت Robinhood اختراق الحساب، ثم حُذف المنشور المزيف.",
+          contrastLabel: "المفارقة:",
+          contrastCopy: "احتاجت الشركة إلى نحو 41 دقيقة لاكتشاف الحادث وتأكيده وتوضيحه؛ وعلى السلسلة تحوّل الاهتمام إلى رسوم خلال سبع دقائق فقط.",
+          s2Index: "02 / المجتمع أسرع من الحبكة",
+          s2Title: "قليلون صدقوا القصة، لكن كثيرين صدقوا أن غيرهم سيشتري.",
+          quote1: "«بنسبة 99% هذا اختراق. التوقيت مريب جداً».",
+          quoteLabel1: "المشككون من النظرة الأولى",
+          quote2: "«إذا نشر المخترق عنوان العقد، ألن تنطلق العملة؟»",
+          quoteLabel2: "فريق التخمين",
+          quote3: "«سأشتري على دفعات. ما دامت الرواية حية فسيظل أحدهم ينتظر قاعاً جديداً».",
+          quoteLabel3: "ما زالوا يتداولون",
+          quote4: "«ارفعوا الضجيج بما يكفي، وقد تخاف العملة وتهبط أكثر».",
+          quoteLabel4: "مراقبو التقلب",
+          quote5: "«استغرق التوضيح أكثر من أربعين دقيقة. على السلسلة هذه عدة جولات كاملة».",
+          quoteLabel5: "منتقدو الاستجابة",
+          quote6: "«عاد الحساب، لكن العملة ما زالت تُتداول. هذه هي نهاية Web3».",
+          quoteLabel6: "فلاسفة السلسلة",
+          quoteNote: "التعليقات صياغات مجهولة ومترجمة عن نقاشات عامة للمجتمع. لا تمثل رأي المنصة وليست نصيحة للتداول.",
+          s3Index: "03 / بعض الأرقام",
+          s3Title: "يمكن حذف المنشور المزيف، لكن الصفقات لا تُلغى تلقائياً.",
+          number1Value: "46 دقيقة",
+          number1Label: "إطلاق الرمز سبق نشر المنشور المزيف",
+          number2Label: "مشاهدة خلال أقل من 20 دقيقة",
+          number3Label: "حجم المجمع الرئيسي خلال الساعات التالية",
+          number4Label: "العدد التقريبي للمبادلات خلال الساعات التالية",
+          numbersNote: "الأرقام مأخوذة من تقارير إعلامية ولقطات للسلسلة بعد الحادث وقد تتغير. حجم التداول لا يساوي ربح المهاجم ولا صافي خسائر المستخدمين.",
+          s4Index: "04 / ما يهم فعلاً",
+          s4Title: "في أسواق الميم، قد يتحول الشك نفسه إلى سيولة.",
+          insightTitle: "عدم التصديق لا يعني عدم التصرف",
+          insightCopy: "لم يصدق بعضهم أن Robinhood أصدرت عملة، لكنهم صدقوا أن الخبر المزيف سيجذب المشتري التالي. لم تعد الصفقة عن الأساسيات، بل عن توقع رد فعل الآخرين.",
+          loop1: "يلاحظ أحدهم المنشور المشبوه ويحذر منه",
+          loop2: "تنتشر التحذيرات ويتسع الوصول",
+          loop3: "يدخل المتفرجون ويصنع التقلب لقطات جديدة",
+          loop4: "تغذي اللقطات الجديدة الجدل والتداول",
+          s5Index: "05 / كيف قد تنتهي القصة",
+          s5Title: "عاد الحساب، لكن القصة لم تُغلق بعد.",
+          outcome1Title: "A: تبقى حادثة أمن حساب",
+          outcome1Copy: "تشرح X سبب الاختراق، وتعزز Robinhood حماية حسابات التنفيذيين، وتنتهي القضية بإشعار أمني.",
+          outcome2Title: "B: تتحول إلى استجابة لمخاطر المنظومة",
+          outcome2Copy: "تُبقي Robinhood تحذيرات المخاطر في المحافظ أو المتصفحات أو واجهات التداول، وتوضح ما إذا كانت ستساعد المتضررين.",
+          outcome3Title: "C: تنسحب الشركة ويواصل المجتمع التداول",
+          outcome3Copy: "تنفصل العملة تماماً عن Robinhood لكن «يتولاها المجتمع»، فيصبح الاختراق نفسه رواية ميم جديدة.",
+          guessTitle: "ما توقعك؟ 👀",
+          guessCopy: "عند أي حلقة ستنتهي الحكاية؟ اختر جواباً واترك توقعك هنا.",
+          guessA: "A | إشعار أمني",
+          guessB: "B | استجابة للمخاطر",
+          guessC: "C | المجتمع يواصل الميم",
+          guessD: "D | لحظة، لدي فكرة أخرى",
+          guessResult: "تم تسجيل توقعك. عد بعد نهاية القصة وقارن إجابتك ✨",
+          finalTitle: "لا يحتاج الميم إلى أن يصدق الجميع القصة. يكفي أن يصدق عدد كافٍ أن شخصاً آخر سيتصرف.",
+          statusCopy: "حتى 2026-07-24 02:42:28 UTC، قال فلاد تينيف إن حسابه استُعيد وإنه ينتظر توضيحاً من X. وأكدت Robinhood مجدداً أنها لم تُصدر أي عملات أو رموز. لم تُنشر بعد نتائج التحقيق الكامل أو إجراءات المتابعة.",
+          footer: "يناقش هذا المقال الحادث وسلوك السوق فقط، ولا يُعد نصيحة استثمارية. عملات الميم شديدة التقلب، ومعاملات السلسلة غير قابلة للعكس؛ تحقّق من العقود والمصادر بنفسك."
+        }
+      };
+
+      const params = new URLSearchParams(window.location.search);
+      const languageValue = (params.get("language") || params.get("lang") || "en").toLowerCase();
+      const simplifiedChineseValues = ["zh-hans-raw", "zh-cn", "zhcn", "zhhans", "zh-hans"];
+      const traditionalChineseValues = ["zh", "zh-hant-raw", "zh-hant", "zhhant", "zh-tw", "zhtw", "zh-hk", "zhhk"];
+      let language = "en";
+
+      if (simplifiedChineseValues.indexOf(languageValue) > -1) {
+        language = "zhHans";
+      } else if (traditionalChineseValues.indexOf(languageValue) > -1) {
+        language = "zhHant";
+      } else if (["ru", "ar", "en"].indexOf(languageValue) > -1) {
+        language = languageValue;
+      }
+
+      const localeMeta = {
+        en: { lang: "en", dir: "ltr" },
+        zhHans: { lang: "zh-CN", dir: "ltr" },
+        zhHant: { lang: "zh-Hant", dir: "ltr" },
+        ru: { lang: "ru", dir: "ltr" },
+        ar: { lang: "ar", dir: "rtl" }
+      };
+
+      const themeValue = (params.get("theme") || "").toLowerCase();
+      const isDark = params.get("isDark") === "1" || themeValue === "dark";
+      const theme = isDark ? "dark" : "light";
+
+      document.documentElement.lang = localeMeta[language].lang;
+      document.documentElement.dir = localeMeta[language].dir;
+      document.documentElement.dataset.theme = theme;
+      document.title = copy[language].pageTitle;
+      document.querySelector('meta[name="theme-color"]').setAttribute("content", isDark ? "#141414" : "#F2F3F5");
+      document.querySelectorAll("[data-i18n]").forEach(function (element) {
+        const key = element.getAttribute("data-i18n");
+        if (copy[language][key]) {
+          element.textContent = copy[language][key];
+        }
+      });
+
+      const sourceImage = document.getElementById("source-shot-image");
+      sourceImage.alt = copy[language].imageAlt;
+      document.getElementById("danmaku-stage").setAttribute("aria-label", copy[language].danmakuAria);
+      sourceImage.addEventListener("error", function () {
+        if (sourceImage.dataset.fallbackTried !== "1") {
+          sourceImage.dataset.fallbackTried = "1";
+          sourceImage.src = sourceImage.dataset.fallbackSrc;
+        } else {
+          sourceImage.hidden = true;
+        }
+      });
+
+      const guessResult = document.getElementById("guess-result");
+      document.querySelectorAll(".guess-option").forEach(function (button) {
+        button.setAttribute("aria-pressed", "false");
+        button.addEventListener("click", function () {
+          document.querySelectorAll(".guess-option").forEach(function (item) {
+            item.classList.remove("is-selected");
+            item.setAttribute("aria-pressed", "false");
+          });
+          button.classList.add("is-selected");
+          button.setAttribute("aria-pressed", "true");
+          guessResult.hidden = false;
+        });
+      });
+
+      document.addEventListener("contextmenu", function (event) {
+        const tag = event.target.tagName;
+        if (tag !== "INPUT" && tag !== "TEXTAREA") {
+          event.preventDefault();
+        }
+      });
+
+      document.addEventListener("gesturestart", function (event) {
+        event.preventDefault();
+      });
+    })();
+  </script>
+</body>
+</html>
