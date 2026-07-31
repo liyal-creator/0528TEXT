@@ -11,6 +11,8 @@
   var params = new URLSearchParams(window.location.search || "");
   var defaultLanguage = runtimeScript ? runtimeScript.getAttribute("data-conso-share-default-language") : "";
   var DEFAULT_CONSO_DEEP_LINK = "conso.tg://open";
+  var DEFAULT_TELEGRAM_MINI_APP_DOMAIN = "conso_mini_bot";
+  var DEFAULT_TELEGRAM_MINI_APP_NAME = "share_invite";
   var TELEGRAM_AUTO_OPEN_DELAY_MS = 3000;
   var INVITE_CODE_PARAM_NAMES = ["inviteCode", "invite_code", "invitationCode", "invitation_code", "startapp"];
 
@@ -115,15 +117,22 @@
 
   function getTelegramMiniAppDomain() {
     var meta = document.querySelector('meta[name="conso-share-telegram-miniapp-domain"]');
-    var domain = String(meta && meta.content || "").trim();
-    return /^[A-Za-z0-9_]{5,64}$/.test(domain) ? domain : "";
+    var domain = String(meta && meta.content || DEFAULT_TELEGRAM_MINI_APP_DOMAIN).trim();
+    return /^[A-Za-z0-9_]{5,64}$/.test(domain) ? domain : DEFAULT_TELEGRAM_MINI_APP_DOMAIN;
+  }
+
+  function getTelegramMiniAppName() {
+    var meta = document.querySelector('meta[name="conso-share-telegram-miniapp-appname"]');
+    var appName = String(meta && meta.content || DEFAULT_TELEGRAM_MINI_APP_NAME).trim();
+    return /^[A-Za-z0-9_]{1,64}$/.test(appName) ? appName : DEFAULT_TELEGRAM_MINI_APP_NAME;
   }
 
   function getTelegramInviteDeepLink() {
     var domain = getTelegramMiniAppDomain();
     if (!domain) return "";
 
-    var deepLink = "tg://resolve?domain=" + encodeURIComponent(domain) + "&appname=invite";
+    var appName = getTelegramMiniAppName();
+    var deepLink = "tg://resolve?domain=" + encodeURIComponent(domain) + "&appname=" + encodeURIComponent(appName);
     var inviteCode = getInviteCode();
     return inviteCode
       ? deepLink + "&startapp=" + encodeURIComponent(inviteCode)

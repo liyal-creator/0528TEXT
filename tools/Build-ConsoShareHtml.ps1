@@ -24,9 +24,11 @@ param(
 
     [string]$MiniAppDomain,
 
+    [string]$MiniAppName,
+
     [string]$Language,
 
-    [string]$RuntimeVersion = "20260727-poster-copy-1"
+    [string]$RuntimeVersion = "20260729-miniapp-name-1"
 )
 
 Set-StrictMode -Version Latest
@@ -82,11 +84,12 @@ $html = Get-Content -LiteralPath $inputFile.FullName -Raw -Encoding UTF8
 $runtimeUrl = "https://cdn.conso.cloud/communityPicks/common/conso-share-runtime.js?v=" + [uri]::EscapeDataString($RuntimeVersion)
 $apiMeta = if ([string]::IsNullOrWhiteSpace($ApiBase)) { "" } else { "`r`n<meta name=`"conso-share-api-base`" content=`"$(Escape-HtmlAttribute $ApiBase)`" />" }
 $miniAppMeta = if ([string]::IsNullOrWhiteSpace($MiniAppDomain)) { "" } else { "`r`n<meta name=`"conso-share-telegram-miniapp-domain`" content=`"$(Escape-HtmlAttribute $MiniAppDomain)`" />" }
+$miniAppNameMeta = if ([string]::IsNullOrWhiteSpace($MiniAppName)) { "" } else { "`r`n<meta name=`"conso-share-telegram-miniapp-appname`" content=`"$(Escape-HtmlAttribute $MiniAppName)`" />" }
 
 $runtimeBlock = @"
 <!-- conso-share-runtime:start -->
 <meta name="conso-share-resource-id" content="$(Escape-HtmlAttribute $ResourceId)" />
-<meta name="conso-share-capture-mode" content="viewport" />$apiMeta$miniAppMeta
+<meta name="conso-share-capture-mode" content="viewport" />$apiMeta$miniAppMeta$miniAppNameMeta
 <script>
 (function () {
   var runtimeUrl = "$runtimeUrl";
